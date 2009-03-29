@@ -1,0 +1,17 @@
+Version 0.4-1 (29.03.2009)
+--------------------------
+# "00Index" angelegt
+# Bugfix in rtmvnorm
+
+Version 0.4 (28.03.2009)
+------------------------
+# Überarbeitung der Dokumentation
+# Fertig für CRAN-Submission
+
+Version 0.3 (01.03.2009)
+------------------------
+# Neue Funktion für Bestimmung der Quantile in einer Dimension: qtmvnorm.marginal()
+
+Version 0.2 (16.02.2009)
+------------------------
+# Bugfix in rtmvnorm()
