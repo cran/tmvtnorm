@@ -1,3 +1,6 @@
+Version 0.5-1 (30.04.2009)
+# rtmvnorm erweitert um Gibbs Sampler (rtmvnorm.gibbs())
+
 Version 0.4-1 (29.03.2009)
 --------------------------
 # "00Index" angelegt

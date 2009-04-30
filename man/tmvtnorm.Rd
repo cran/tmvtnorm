@@ -1,11 +1,9 @@
 % --- Source file: tmvtnorm.Rd ---
 \name{tmvnorm}
 \alias{dtmvnorm}
-\alias{rtmvnorm}
-\title{Truncated Multivariate Normal Density and Random Numbers}
+\title{Truncated Multivariate Normal Density}
 \description{
-  These functions provide the density function and a random number
-  generator for the truncated multivariate normal
+  These functions provide the density function for the truncated multivariate normal
   distribution with mean equal to \code{mean} and covariance matrix
   \code{sigma}, lower and upper truncation points \code{lower} and \code{upper}
 }
@@ -14,15 +12,10 @@ dtmvnorm(x, mean = rep(0, nrow(sigma)),
   sigma = diag(length(mean)), 
   lower=rep(-Inf, length = length(mean)), 
   upper=rep( Inf, length = length(mean)))
-rtmvnorm(n, mean = rep(0, nrow(sigma)), 
-  sigma = diag(length(mean)), 
-  lower=rep(-Inf, length = length(mean)), 
-  upper=rep( Inf, length = length(mean)))
 }
 
 \arguments{
  \item{x}{Vector or matrix of quantiles. If \code{x} is a matrix, each row is taken to be a quantile.}
- \item{n}{Number of observations.}
  \item{mean}{Mean vector, default is \code{rep(0, length = ncol(x))}.}
  \item{sigma}{Covariance matrix, default is \code{diag(ncol(x))}.}
  \item{lower}{Vector of lower truncation points,\\ 
@@ -37,12 +30,6 @@ The computation of truncated multivariate normal probabilities and densities is 
 from the standard/untruncated multivariate normal distribution. 
 So we refer to the documentation of the mvtnorm package and the methodology is described in
 Genz (1992, 1993).
-
-The generation of random numbers from a truncated multivariate normal distribution is done using rejection sampling
-from the standard multivariate normal distribution. So we use the function \code{\link[mvtnorm]{rmvnorm}} of the mvtnorm package.
-In order to speed up the generation of N samples from the truncated distribution, 
-we first calculate the acceptance rate alpha from the truncation points and then generate N/alpha samples iteratively 
-until we have got N samples. This typically does not take more then 2-3 iterations.
 }
  
 \author{Stefan Wilhelm <Stefan.Wilhelm@financial.com>}
