@@ -43,6 +43,25 @@ X=rtmvnorm(n=10000, mean=c(0,0), sigma=matrix(c(1, 0.8, 0.8, 2), 2, 2), lower=c(
 Rprof(NULL)
 summaryRprof("rtmvnorm.out")
 
+# Example 4: Profiling of Gibbs sampling: 10000 samples ~ 0.8 second
+Rprof("rtmvnorm.gibbs.out")
+m     = 10
+a     = rep(-1, m)
+b     = rep(1,  m)
+
+# Erwartungswert und Kovarianzmatrix erzeugen
+mu          = rep(0, m)
+sigma       = matrix(0.8, m, m)
+diag(sigma) = rep(1, m)
+
+# Akzeptanzrate ausrechnen
+alpha       = pmvnorm(lower=a, upper=b, mean=mu, sigma=sigma)
+alpha
+
+X=rtmvnorm(n=10000, mean=mu, sigma=sigma, lower=a, upper=b, algorithm="gibbs")
+Rprof(NULL)
+summaryRprof("rtmvnorm.gibbs.out")
+
 # Sampling from non-truncated normal distribution 10000 samples ~ 0.02 second
 Rprof("rmvnorm.out")
 X=rmvnorm(n=10000, mean=c(0,0), sigma=matrix(c(1, 0.8, 0.8, 2), 2, 2))

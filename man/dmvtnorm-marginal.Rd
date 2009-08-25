@@ -5,7 +5,7 @@
 
 \title{One-dimensional marginal density functions from a Truncated Multivariate Normal distribution}
 \description{
-  This function computes the one-dimensional marginal density functions from a Truncated Multivariate Normal density function
+  This function computes the one-dimensional marginal density function from a Truncated Multivariate Normal density function
   using the algorithm given in Cartinhour (1990).
 }
 

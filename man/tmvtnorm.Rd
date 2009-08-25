@@ -11,7 +11,8 @@
 dtmvnorm(x, mean = rep(0, nrow(sigma)), 
   sigma = diag(length(mean)), 
   lower=rep(-Inf, length = length(mean)), 
-  upper=rep( Inf, length = length(mean)))
+  upper=rep( Inf, length = length(mean)),
+  log=FALSE)
 }
 
 \arguments{
@@ -22,6 +23,7 @@ dtmvnorm(x, mean = rep(0, nrow(sigma)),
               default is \code{rep(-Inf, length = length(mean))}.}
  \item{upper}{Vector of upper truncation points,\\ 
               default is \code{rep( Inf, length = length(mean))}.}
+ \item{log}{Logical; if TRUE, densities d are given as log(d).}
 }
 
 \details{

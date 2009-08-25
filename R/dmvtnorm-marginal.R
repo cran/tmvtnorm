@@ -43,16 +43,16 @@ dtmvnorm.marginal <- function(xn, n=1, mean=rep(0, nrow(sigma)), sigma=diag(leng
    # Anzahl der Dimensionen                
    k = length(mean)
    
-   if (n > length(mean))
+   if (n < 1 || n > length(mean) || !is.numeric(n) || length(n) > 1 ||  !n %in% 1:length(mean))
    {
-     stop("n must be in 1..length(mean)")
+     stop("n must be a integer scalar in 1..length(mean)")
    }
    
-   # a[n] <= x <= b[n], sonst Dichte 0
-   if (!(lower[n]<=xn && xn<=upper[n]))
-   {
-     return(0)
-   }
+   # TODO : funktioniert nicht hier wg. Vektorisierung: a[n] <= x <= b[n], sonst Dichte 0
+   #if (!(lower[n]<=xn && xn<=upper[n]))
+   #{
+   #  return(0)
+   #}
    
    # Univariater Fall, vgl. Greene (2003), S.573
    if (k == 1)
@@ -93,18 +93,73 @@ dtmvnorm.marginal <- function(xn, n=1, mean=rep(0, nrow(sigma)), sigma=diag(leng
    f_xn <- c()
    for (i in 1:length(xn))
    {
-     if (!(lower[n]<=xn[i] && xn[i]<=upper[n]))
+     if (!(lower[n]<=xn[i] && xn[i]<=upper[n]) || is.infinite(xn[i]))
      {
        f_xn[i] = 0
        next
      }
      
      # m(x_n) --> (n-1x1)
+     # Aufpassen bei z.B. m=c(Inf, Inf, NaN) und c=0
      m = mu_1 + (xn[i] - mu_n) * c / c_nn
-   
+     
      f_xn[i] =  exp(-0.5*(xn[i]-mu_n)^2/c_nn) * pmvnorm(lower=lower[-n], upper=upper[-n], mean=m, sigma=A_1_inv)
    }
    1/p * 1/sqrt(2*pi*c_nn) * f_xn
 }
+
+
+# Bestimme die k1-dimensionale Randverteilungen durch numerische Integration mit adapt() und integrate()
+#
+# @param x Vektor der Länge k1 < k für die Randverteilung
+# @param n Vektor der Länge k1 < k für die Randverteilung mit den Indizes (1..k)
+dtmvnorm.marginal.integration <- function(x, n, mean, sigma, lower, upper)
+{
+  k  = length(mean)
+  
+  # Anzahl der Dimensionen der Randdichte
+  k1 = length(x)
+  # Anzahl der Dimensionen/Variablen, in denen integriert werden soll/die rausintegriert werden sollen k1 + k2 = k
+  k2 = k - k1
+  
+  if (k1 >= k || k1 < 1) stop("length of x must be 1 <= x < k")
+  if (length(x) != length(n)) stop("length of x must be the same as length of n")
+  
+  # Skalierungsfaktor der Dichte
+  p = pmvnorm(lower=lower, upper=upper, mean=mu, sigma=sigma)
+  
+  # Dichtefunktion in k = k1 + k2 Dimensionen
+  fd = function(z)
+  {
+    y     = numeric(k)
+    y[n]  = x   # k1 Dimensionen der Randdichte
+    y[-n] = z   # k2 Dimensionen: Variablen, die rausintegriert werden
+    
+    res = dtmvnorm(y, mean, sigma, lower, upper)                  
+    cat("Evaluating function for z=",z," res=",res,"\n")
+    flush.console()
+    return(res)
+  }
+  
+  fdv = Vectorize(fd)
+  
+  # Integriere in k2 = k - k1 dimensionen, wenn k2 = 1, dann mit integrate(), sonst mit adapt()
+  if (k2 == 1)
+  {
+    res = integrate(fdv, lower=lower[-n], upper=upper[-n])
+  }
+  else
+  {
+    res = adapt(ndim=k2, lo = lower[-n], up = upper[-n], functn = fd)
+  }
+  return(res/p) 
+}
+
+
+#dtmvnorm.marginal.integration(x=c(0,0), n=c(1,2), mean, sigma, lower=a, upper=b)
+#dtmvnorm.marginal.integration(x=0, n=1, mean, sigma, lower=a, upper=b)
+#dtmvnorm.marginal(x=0, n=1, mean, sigma, lower=a, upper=b)
+#
+#dtmvnorm.marginal.integration(x=c(0,0), n=c(1,2), mean, sigma, lower=a, upper=b)
 
 

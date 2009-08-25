@@ -4,6 +4,9 @@
 # b) Gibbs sampler
 # 
 # Author: Stefan Wilhelm
+#
+# Literatur:
+# (1) Kotecha (1999)
 ###############################################################################
 
 # Erzeugt eine Matrix X (n x k) mit Zufallsrealisationen aus einer Trunkierten Multivariaten Normalverteilung mit k Dimensionen
@@ -78,13 +81,15 @@ rtmvnorm.rejection <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(lengt
   # Akzeptanzrate alpha aus der Multivariaten Normalverteilung bestimmen
   alpha = pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma)
   
+  if (alpha <= 0.01) warning("Acceptance rate is very low and rejection sampling becomes inefficient. Consider using Gibbs sampling.")
+  
   # Ziehe wiederholt aus der Multivariaten NV und schaue, wieviel Samples nach Trunkierung übrig bleiben
   while(numSamples > 0)
   {
     #cat("numSamplesAcceptedTotal=",numAcceptedSamplesTotal," numSamplesToDraw = ",numSamples,"\n")
     
-    # Erzeuge Samples aus einer multivariaten Normalverteilung
-    nproposals = ceiling(max(numSamples/alpha,10))
+    # Erzeuge N/alpha Samples aus einer multivariaten Normalverteilung: Wenn alpha zu niedrig ist, wird Rejection Sampling ineffizient und N/alpha zu groß. Dann nur N erzeugen
+    nproposals = ifelse (numSamples/alpha > 1000000, numSamples, ceiling(max(numSamples/alpha,10)))
     X = rmvnorm(nproposals, mean=mean, sigma=sigma)
     
     # Bestimme den Anteil der Samples nach Trunkierung
@@ -100,7 +105,14 @@ rtmvnorm.rejection <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(lengt
     X.ind = X[ind,]
     
     # Anzahl der akzeptierten Samples in diesem Durchlauf
-    numAcceptedSamples = nrow(X.ind)
+    if (k == 1) # im univariaten Fall
+    {
+      numAcceptedSamples = length(X.ind)
+    }
+    else
+    {
+      numAcceptedSamples = nrow(X.ind)
+    }
     
     # Wenn nix akzeptiert wurde, dann weitermachen
     if (length(numAcceptedSamples) == 0 || numAcceptedSamples == 0) next
@@ -131,6 +143,10 @@ rtmvnorm.rejection <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(lengt
 # Jayesh H. Kotecha and Petar M. Djuric (1999) : GIBBS SAMPLING APPROACH FOR GENERATION OF TRUNCATED MULTIVARIATE GAUSSIAN RANDOM VARIABLES
 #
 # @param n Anzahl der Realisationen
+# @param mu
+# @param sigma
+# @param a unterer Trunkierungspunkt
+# @param b oberer Trunkierungspunkt
 rtnorm.gibbs <- function(n, mu=0, sigma=1, a=-Inf, b=Inf)
 {
    # Draw from Gaussian Distribution	
@@ -145,8 +161,8 @@ rtnorm.gibbs <- function(n, mu=0, sigma=1, a=-Inf, b=Inf)
    
    # Truncated Normal Distribution, see equation (6), but F(x) ~ Uni(0,1), 
    # so we directly draw from Uni(0,1)...
-   #y  =  qnorm(pnorm(x)*(Fb - Fa) + Fa)
-   y  =  qnorm(F*(Fb - Fa) + Fa)	
+   #y  =  mu + sigma * qnorm(pnorm(x)*(Fb - Fa) + Fa)
+   y  =  mu + sigma * qnorm(F * (Fb - Fa) + Fa)	
    
    y
 }
@@ -217,6 +233,13 @@ rtmvnorm.gibbs <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(me
   
   # actual number of samples to draw (including burn-in samples)
   n = n + S
+  
+  # Sample from univariate truncated normal distribution which is very fast.
+  if (d == 1)
+  {
+    X = rtnorm.gibbs(n, mu=mean[1], sigma=sigma[1,1], a=lower[1], b=upper[1])
+    return(X)
+  }
       
   # Ergebnismatrix (n x k)
   X <- matrix(NA, n, d)
@@ -251,12 +274,12 @@ rtmvnorm.gibbs <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(me
       # bedingte Varianz hängt nicht von x[-i] ab!
       mu_i     = mean[i]    + P[[i]] %*% (x[-i] - mean[-i])
       
-      # Transformation 
-      Fa = pnorm(lower[i], mu_i, sd[[i]])
-      Fb = pnorm(upper[i], mu_i, sd[[i]])
-      y  = mu_i + sd[[i]] * qnorm(F[j,i] * (Fb - Fa) + Fa)
-      
-      x[i] = y 
+      # Transformation
+	  # TODO: evtl. nur ein Aufruf von pnorm...	
+      F.tmp = pnorm(c(lower[i], upper[i]), mu_i, sd[[i]])
+	  Fa    = F.tmp[1]
+      Fb    = F.tmp[2]
+	  x[i]  = mu_i + sd[[i]] * qnorm(F[j,i] * (Fb - Fa) + Fa)
     }
     X[j,] = x
   }

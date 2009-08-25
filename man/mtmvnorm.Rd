@@ -1,0 +1,65 @@
+\name{mtmvnorm}
+\alias{mtmvnorm}
+\alias{moments}
+
+\title{Computation of Mean Vector and Covariance Matrix For Truncated Multivariate Normal Distribution}
+\description{
+  Computation of the first two moments, i.e. mean vector and covariance matrix 
+  for the Truncated Multivariate Normal Distribution 
+  based on the works of Tallis (1961), Lee (1979) and Leppard and Tallis (1989),
+  but extended to the double-truncated case with general mean and general covariance matrix.
+}
+\usage{
+mtmvnorm(mean, sigma, lower, upper)
+}
+
+\arguments{
+  \item{mean}{Mean vector, default is \code{rep(0, length = ncol(x))}.}
+  \item{sigma}{Covariance matrix, default is \code{diag(ncol(x))}.}
+  \item{lower}{Vector of lower truncation points,\\ 
+              default is \code{rep(-Inf, length = length(mean))}.}
+  \item{upper}{Vector of upper truncation points,\\ 
+              default is \code{rep( Inf, length = length(mean))}.}
+}
+
+\value{
+  \item{mean}{Mean vector of truncated variables}
+  \item{cov}{Covariance matrix of truncated variables}
+}
+\references{
+
+Tallis, G. M. (1961). The moment generating function of the truncated multinormal distribution. 
+\emph{Journal of the Royal Statistical Society, Series B}, \bold{23}, 223--229
+
+Lee, L.-F. (1979). On the first and second moments of the truncated multi-normal distribution and a simple estimator. 
+\emph{Economics Letters}, \bold{3}, 165--169
+
+Leppard, P. and Tallis, G. M. (1989). Evaluation of the Mean and Covariance of the Truncated Multinormal.
+\emph{Applied Statistics}, \bold{38}, 543--553
+
+Manjunath B G and Wilhelm, S. (2009). Moments Calculation For the Double Truncated Multivariate Normal Density. 
+Working Paper.
+}
+
+\author{Stefan Wilhelm <Stefan.Wilhelm@financial.com>, Manjunath B G <bgmanjunath@gmail.com>}
+
+\examples{
+  mu    <- c(0.5, 0.5, 0.5)
+  sigma <- matrix(c(  1,  0.6, 0.3,
+                    0.6,    1, 0.2,
+                    0.3,  0.2,   2), 3, 3)
+                    
+  a  <- c(-Inf, -Inf, -Inf)
+  b  <- c(1, 1, 1)
+
+  # compute first and second moments
+  mtmvnorm(mu, sigma, lower=a, upper=b)
+  
+  # compare with simulated results
+  X <- rtmvnorm(n=1000, mean=mu, sigma=sigma, lower=a, upper=b)
+  colMeans(X)
+  cov(X)
+}
+
+\keyword{distribution}
+\keyword{multivariate}

@@ -1,16 +1,18 @@
 Package: tmvtnorm
-Version: 0.5-1
-Date: 2009-04-30
+Version: 0.7-2
+Date: 2009-08-25
 Title: Truncated Multivariate Normal Distribution
 Author: Stefan Wilhelm <wilhelm@financial.com>
 Maintainer: Stefan Wilhelm <wilhelm@financial.com>
 Imports: stats, graphics
 Depends: R (>= 1.9.0), mvtnorm, utils
 Description: Computes truncated multivariate normal probabilities,
-        quantiles and densities, including one-dimensional marginal
-        densities
+        quantiles and densities, including one-dimensional and
+        bivariate marginal densities. Random number generation.
+        Computes first and second moments (i.e. mean and covariance
+        matrix) for the double-truncated case.
 License: GPL (>= 2)
 URL: http://www.r-project.org
-Packaged: Mon May 4 11:44:01 2009; stefan
+Packaged: 2009-08-25 21:26:35 UTC; stefan
 Repository: CRAN
-Date/Publication: 2009-05-04 10:27:06
+Date/Publication: 2009-08-26 12:39:25
