@@ -19,7 +19,7 @@ dtmvnorm.marginal(xn, n=1,
 
 \arguments{
  \item{xn}{Vector of quantiles to calculate the marginal density for.}
- \item{n}{Index position within the random vector x to calculate the one-dimensional marginal density for.}
+ \item{n}{Index position (1..k) within the random vector x to calculate the one-dimensional marginal density for.}
  \item{mean}{Mean vector, default is \code{rep(0, length = nrow(sigma))}.}
  \item{sigma}{Covariance matrix, default is \code{diag(length(mean))}.}
  \item{lower}{Vector of lower truncation points,\\ 
@@ -27,6 +27,14 @@ dtmvnorm.marginal(xn, n=1,
  \item{upper}{Vector of upper truncation points,\\ 
    default is \code{rep( Inf, length = length(mean))}.}
 }
+
+\details{
+  The one-dimensional marginal density \eqn{f_i(x_i)} of \eqn{x_i} is
+  \deqn{f_i(x_i) = \int_{a_1}^{b_1} \ldots \int_{a_{i-1}}^{b_{i-1}} \int_{a_{i+1}}^{b_{i+1}} \ldots \int_{a_k}^{b_k} f(x) dx_{-i}}
+  Note that the one-dimensional marginal density is not truncated normal, but only conditional densities are truncated normal.
+}
+
+\author{Stefan Wilhelm <Stefan.Wilhelm@financial.com>}
 
 \references{
 Cartinhour, J. (1990). One-dimensional marginal density functions of a truncated multivariate normal density function.

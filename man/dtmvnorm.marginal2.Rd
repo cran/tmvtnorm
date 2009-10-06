@@ -6,8 +6,8 @@
 Bivariate marginal density functions from a Truncated Multivariate Normal distribution
 }
 \description{
- This function computes the bivariate marginal density function $f(x_q, x_r)$ from a n-dimensional Truncated Multivariate Normal density function (n>=2).
- The bivariate marginal density is obtained by integrating out (n-2) dimensions as proposed by Tallis (1961).
+ This function computes the bivariate marginal density function \eqn{f(x_q, x_r)} from a k-dimensional Truncated Multivariate Normal density function (k>=2).
+ The bivariate marginal density is obtained by integrating out (k-2) dimensions as proposed by Tallis (1961).
  This function is basically an extraction of the Leppard and Tallis (1989) Fortran code for moments calculation,
  but extended to the double truncated case.
 }
@@ -21,16 +21,23 @@ dtmvnorm.marginal2(xq, xr, q, r,
 }
 
 \arguments{
-  \item{xq}{Value $x_q$}
-  \item{xr}{Value $x_r$}
-  \item{q}{Index position for $x_q$ within mean vector to calculate the bivariate marginal density for.}
-  \item{r}{Index position for $x_r$ within mean vector to calculate the bivariate marginal density for.}
+  \item{xq}{Value \eqn{x_q}}
+  \item{xr}{Value \eqn{x_r}}
+  \item{q}{Index position for \eqn{x_q} within mean vector to calculate the bivariate marginal density for.}
+  \item{r}{Index position for \eqn{x_r} within mean vector to calculate the bivariate marginal density for.}
   \item{mean}{Mean vector, default is \code{rep(0, length = nrow(sigma))}.}
   \item{sigma}{Covariance matrix, default is \code{diag(length(mean))}.}
-  \item{lower}{Vector of lower truncation points,\\ 
+  \item{lower}{Vector of lower truncation points, 
    default is \code{rep(-Inf, length = length(mean))}.}
-  \item{upper}{Vector of upper truncation points,\\ 
+  \item{upper}{Vector of upper truncation points, 
    default is \code{rep( Inf, length = length(mean))}.}
+}
+
+\details{
+  The bivariate marginal density function \eqn{f(x_q, x_r)} for \eqn{x \sim TN(\mu, \Sigma, a, b)} and \eqn{q \ne r} is defined as
+  \deqn{F_{q,r}(x_q=c_q, x_r=c_r) = 
+  \int^{b_1}_{a_1}...\int^{b_{q-1}}_{a_{q-1}}\int^{b_{q+1}}_{a_{q+1}}...\int^{b_{r-1}}_{a_{r-1}}\int^{b_{r+1}}_{a_{r+1}}...\int^{b_{k}}_{a_{k}} 
+  \varphi{_{\alpha}}_{\Sigma}(x_s, c_q, c_r) dx_s}
 }
 
 \references{
@@ -41,7 +48,7 @@ Leppard, P. and Tallis, G. M. (1989). Evaluation of the Mean and Covariance of t
 \emph{Applied Statistics}, \bold{38}, 543--553
 
 Manjunath B G and Wilhelm, S. (2009). Moments Calculation For the Double Truncated Multivariate Normal Density. 
-Working Paper.
+Working Paper. Available at SSRN: \url{http://ssrn.com/abstract=1472153}
 }
 \author{Stefan Wilhelm <Stefan.Wilhelm@financial.com>, Manjunath B G <bgmanjunath@gmail.com>}
 
@@ -57,7 +64,8 @@ Working Paper.
   
   # generate random samples from untruncated and truncated distribution
   Y = rmvnorm(10000, mean=mean, sigma=sigma)
-  X = rtmvnorm(500,  mean=mean, sigma=sigma, lower=lower, upper=upper, algorithm="gibbs")
+  X = rtmvnorm(500,  mean=mean, sigma=sigma, lower=lower, upper=upper, 
+      algorithm="gibbs")
     
   # compute bivariate marginal density of x1 and x2
   xq <- seq(lower[1], upper[1], by=0.1)
@@ -68,15 +76,19 @@ Working Paper.
   {
     for (j in 1:length(xr))
     {
-      grid[i,j] = dtmvnorm.marginal2(xq=xq[i], xr=xr[j], q=1, r=2, sigma=sigma, lower=lower, upper=upper)
+      grid[i,j] = dtmvnorm.marginal2(xq=xq[i], xr=xr[j], 
+        q=1, r=2, sigma=sigma, lower=lower, upper=upper)
     }
   }
   
-  plot(Y[,1], Y[,2], main=expression("bivariate marginal density ("*x[1]*","*x[2]*")"), 
-    xlim=c(-4, 4), ylim=c(-4, 4), xlab=expression(x[1]), ylab=expression(x[2]), col="gray80")
+  plot(Y[,1], Y[,2], xlim=c(-4, 4), ylim=c(-4, 4), 
+     main=expression("bivariate marginal density ("*x[1]*","*x[2]*")"), 
+     xlab=expression(x[1]), ylab=expression(x[2]), col="gray80")
   points(X[,1], X[,2], col="black")
   
-  lines(x=c(lower[1], upper[1], upper[1], lower[1], lower[1]), y=c(lower[2],lower[2],upper[2],upper[2],lower[2]), lty=2, col="red")
+  lines(x=c(lower[1], upper[1], upper[1], lower[1], lower[1]), 
+        y=c(lower[2],lower[2],upper[2],upper[2],lower[2]), 
+        lty=2, col="red")
   contour(xq, xr, grid, add=TRUE, nlevels = 8, col="red", lwd=2)
   
   # scatterplot matrices for untruncated and truncated points

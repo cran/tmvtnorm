@@ -14,7 +14,7 @@ rtmvnorm(n, mean = rep(0, nrow(sigma)),
   sigma = diag(length(mean)), 
   lower=rep(-Inf, length = length(mean)), 
   upper=rep( Inf, length = length(mean)),
-  algorithm=c("rejection", "gibbs"),
+  algorithm=c("rejection", "gibbs", "gibbsR"),
   ...)
 }
 
@@ -26,8 +26,11 @@ rtmvnorm(n, mean = rep(0, nrow(sigma)),
               default is \code{rep(-Inf, length = length(mean))}.}
  \item{upper}{Vector of upper truncation points,\\ 
               default is \code{rep( Inf, length = length(mean))}.}
- \item{algorithm}{Method used, possible methods are rejection sampling ("rejection", default) and Gibbs sampler ("gibbs").}
- \item{...}{additional parameters for Gibbs sampling, given to \code{rmvtnorm.gibbs}, such as burn.in.samples and start.value}               
+ \item{algorithm}{Method used, possible methods are rejection sampling ("rejection", default), 
+                  the Fortan Gibbs sampler ("gibbs") 
+                  and the old Gibbs sampler implementation in R ("gibbsR").}
+ \item{...}{additional parameters for Gibbs sampling, given to \code{rmvtnorm.gibbs}, 
+            such as burn.in.samples and start.value}               
 }
 
 \details{
@@ -43,11 +46,14 @@ until we have got N samples. This typically does not take more then 2-3 iteratio
 Rejection sampling may be very inefficient when the support region is small (i.e. in higher dimensions) 
 which results in very low acceptance rates alpha. In this case the Gibbs sampler is preferable.
 
-The Gibbs Sampler samples from univariate conditional distributions, 
+The Gibbs sampler samples from univariate conditional distributions, 
 so all samples can be accepted except for a burn-in period. 
 The number of burn-in samples to be discarded can be specified, as well as a start value.
 If no start value is given we determine a start value from the support region
 using either lower bound or upper bound if they are finite, or 0 otherwise.
+
+The Gibbs sampler has been reimplemented in Fortran 90 for performance reasons (algorithm="gibbs"). 
+The old R implementation is still accessible through algorithm="gibbsR".
 }
  
 \author{Stefan Wilhelm <Stefan.Wilhelm@financial.com>, Manjunath B G <bgmanjunath@gmail.com>}
@@ -101,7 +107,8 @@ alpha = pmvnorm(lower=lower, upper=upper, mean=rep(0,4), sigma=C)
 alpha
 
 # Gibbs sampler
-X1=rtmvnorm(n=20000, mean = rep(0,4), sigma=C, lower=lower, upper=upper, algorithm="gibbs", burn.in.samples=100)
+X1=rtmvnorm(n=20000, mean = rep(0,4), sigma=C, lower=lower, upper=upper, 
+  algorithm="gibbs", burn.in.samples=100)
 # Rejection sampling
 X2=rtmvnorm(n=5000, mean = rep(0,4), sigma=C, lower=lower, upper=upper)
 
@@ -110,7 +117,8 @@ colMeans(X2)
 
 plot(density(X1[,1]), col="red", lwd=2, main="Gibbs vs. Rejection")
 lines(density(X2[,1]), col="blue", lwd=2)
-legend("topleft",legend=c("Gibbs Sampling","Rejection Sampling"), col=c("red","blue"), lwd=2)
+legend("topleft",legend=c("Gibbs Sampling","Rejection Sampling"), 
+  col=c("red","blue"), lwd=2)
 
 }
 \keyword{distribution}

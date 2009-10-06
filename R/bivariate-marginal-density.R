@@ -5,8 +5,6 @@
 # Tallis (1961): "The Moment Generating Function of the Truncated Multi-normal Distribution"
 # Leppard and Tallis (1989): "Evaluation of the Mean and Covariance of the Truncated Multinormal"
 
-library(mvtnorm)
-
 # (n-2) Integral, d.h. zweidimensionale Randdichte in Dimension q und r, da (n-2) Dimensionen rausintegriert werden.
 # vgl. Tallis (1961), S.224 und Code Leppard (1989), S.550
 #

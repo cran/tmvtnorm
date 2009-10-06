@@ -1,4 +1,18 @@
-Version 0.7-1 (09.08.2009) Upcoming
+Version 0.9-1 upcoming
+----------------------
+# Bayesian estimation according to Griffiths (2002)
+
+Version 0.8-2 (30.09.2009)
+-----------------------------------
+# Added formulae to documentation
+
+Version 0.8-1 (22.09.2009)
+-----------------------------------
+# One-dimensional marginal probability added (ptmvnorm.marginal())
+# Fortran 90 code for Gibbs Sampler (rtmvnorm.gibbs())
+# RUnit Tests ausgeweitet
+
+Version 0.7-1 (09.08.2009)
 -----------------------------------
 # First and second moment calculation for general mu-sigma case
   a) Leppard (1989) für einseitige Truncation im allgemeinen Fall

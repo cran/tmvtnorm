@@ -17,8 +17,9 @@
 # @param sigma Kovarianzmatrix (k x k) der Normalverteilung
 # @param lower unterer Trunkierungsvektor (k x 1) mit lower <= x <= upper
 # @param upper oberer Trunkierungsvektor (k x 1) mit lower <= x <= upper
+# @param algorithm c("rejection", "gibbs", "gibbsR")
 rtmvnorm <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), lower = rep(-Inf, length = length(mean)), upper = rep( Inf, length = length(mean)), 
-		algorithm=c("rejection", "gibbs"), ...)
+		algorithm=c("rejection", "gibbs", "gibbsR"), ...)
 {
   algorithm <- match.arg(algorithm)
   if (algorithm == "rejection")
@@ -26,6 +27,10 @@ rtmvnorm <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), 
 	retval <- rtmvnorm.rejection(n, mean, sigma, lower, upper, ...)  
   }
   else if (algorithm == "gibbs")
+  {
+	retval <- rtmvnorm.gibbs.Fortran(n, mean, sigma, lower, upper, ...)  
+  }
+  else if (algorithm == "gibbsR")
   {
 	retval <- rtmvnorm.gibbs(n, mean, sigma, lower, upper, ...)  
   }
@@ -49,6 +54,11 @@ rtmvnorm.rejection <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(lengt
     sigma <- diag(length(mean))
   }
   
+  if (!is.matrix(sigma))
+  {
+    sigma = as.matrix(sigma)
+  }
+  
   if (NCOL(lower) != NCOL(upper)) {
     stop("lower and upper have non-conforming size")
   }
@@ -61,9 +71,18 @@ rtmvnorm.rejection <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(lengt
     stop("mean and sigma have non-conforming size")
   }
   
+  if (det(sigma) <= 0) {
+    stop("sigma must be positive definite")
+  }
+  
   if (any(lower>=upper))
   {
     stop("lower must be smaller than or equal to upper (lower<=upper)")
+  }
+  
+  if (n < 1 || !is.numeric(n) || length(n) > 1)
+  {
+    stop("n must be a integer scalar > 0")
   }
 
   # k = Dimension
@@ -86,8 +105,6 @@ rtmvnorm.rejection <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(lengt
   # Ziehe wiederholt aus der Multivariaten NV und schaue, wieviel Samples nach Trunkierung übrig bleiben
   while(numSamples > 0)
   {
-    #cat("numSamplesAcceptedTotal=",numAcceptedSamplesTotal," numSamplesToDraw = ",numSamples,"\n")
-    
     # Erzeuge N/alpha Samples aus einer multivariaten Normalverteilung: Wenn alpha zu niedrig ist, wird Rejection Sampling ineffizient und N/alpha zu groß. Dann nur N erzeugen
     nproposals = ifelse (numSamples/alpha > 1000000, numSamples, ceiling(max(numSamples/alpha,10)))
     X = rmvnorm(nproposals, mean=mean, sigma=sigma)
@@ -126,7 +143,14 @@ rtmvnorm.rejection <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(lengt
     else
     {
       # Übernehmen nur der benötigten Samples
-      Y[(numAcceptedSamplesTotal+1):(numAcceptedSamplesTotal+numSamples),] = X.ind[1:numSamples,]
+      if (k == 1) # im univariaten Fall
+      {
+        Y[(numAcceptedSamplesTotal+1):(numAcceptedSamplesTotal+numSamples)]  = X.ind[1:numSamples]
+      }
+      else
+      {
+        Y[(numAcceptedSamplesTotal+1):(numAcceptedSamplesTotal+numSamples),] = X.ind[1:numSamples,]
+      }
     }
     
     # Anzahl der akzeptierten Samples insgesamt
@@ -187,6 +211,11 @@ rtmvnorm.gibbs <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(me
   if (missing(sigma)) {
 	sigma <- diag(length(mean))
   }
+  
+  if (!is.matrix(sigma))
+  {
+    sigma = as.matrix(sigma)
+  }
 	
   if (NCOL(lower) != NCOL(upper)) {
 	stop("lower and upper have non-conforming size")
@@ -201,10 +230,19 @@ rtmvnorm.gibbs <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(me
   {
 	stop("mean and sigma have non-conforming size")
   }
+  
+  if (det(as.matrix(sigma)) <= 0) {
+    stop("sigma must be positive definite")
+  }
 	
   if (any(lower>=upper))
   {
-   stop("lower must be smaller than or equal to upper (lower<=upper)")
+    stop("lower must be smaller than or equal to upper (lower<=upper)")
+  }
+  
+  if (n < 1 || !is.numeric(n) || length(n) > 1)
+  {
+    stop("n must be a integer scalar > 0")
   }
 	
   # dimension of X
@@ -245,7 +283,8 @@ rtmvnorm.gibbs <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(me
   X <- matrix(NA, n, d)
   
   # Draw from Uni(0,1)
-  F = matrix(runif(n * d), n, d)
+  U = runif(n * d)
+  l = 1
   
   # List of conditional standard deviations can be pre-calculated
   sd <- list(d)
@@ -257,10 +296,10 @@ rtmvnorm.gibbs <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(me
     # Partitioning of Sigma
     Sigma    = sigma[-i,-i] # (d-1) x (d-1)
     sigma_ii = sigma[i,i]   # 1 x 1
-    Sigma_i  = sigma[i,-i]  # (d-1) x 1
+    Sigma_i  = sigma[i,-i]  # 1 x (d-1)
     
-    P[[i]]   = t(Sigma_i) %*% solve(Sigma)
-    sd[[i]]  = sqrt(sigma_ii - P[[i]] %*% Sigma_i)
+    P[[i]]   = t(Sigma_i) %*% solve(Sigma)  # (1 x (d-1)) * ((d-1) x (d-1)) =  (1 x (d-1))
+    sd[[i]]  = sqrt(sigma_ii - P[[i]] %*% Sigma_i)  # (1 x (d-1)) * ((d-1) x 1)
   }
   
   x <- x0
@@ -279,10 +318,115 @@ rtmvnorm.gibbs <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(me
       F.tmp = pnorm(c(lower[i], upper[i]), mu_i, sd[[i]])
 	  Fa    = F.tmp[1]
       Fb    = F.tmp[2]
-	  x[i]  = mu_i + sd[[i]] * qnorm(F[j,i] * (Fb - Fa) + Fa)
+	  x[i]  = mu_i + sd[[i]] * qnorm(U[l] * (Fb - Fa) + Fa)
+      l     = l + 1
     }
     X[j,] = x
   }
+  # if number of burn-in samples has been given, discard burn-in samples
+  if (S > 0)
+  {
+    return(X[-(1:S),])
+  }
+  else
+  {
+	return(X)
+  }
+}
+
+# Versuch, die Gibbs Sampler Methode schneller zu machen mittels kompiliertem Fortran-Code
+rtmvnorm.gibbs.Fortran <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), lower = rep(-Inf, length = length(mean)), upper = rep( Inf, length = length(mean)), burn.in.samples = 0, start.value = NULL)
+{
+  if (missing(mean)) {
+	mean <- rep(0, length = nrow(sigma))
+  }
+  if (missing(sigma)) {
+	sigma <- diag(length(mean))
+  }
+  
+  if (!is.matrix(sigma))
+  {
+    sigma = as.matrix(sigma)
+  }
+	
+  if (NCOL(lower) != NCOL(upper)) {
+	stop("lower and upper have non-conforming size")
+  }
+	
+  if (NROW(sigma) != NCOL(sigma)) 
+  {
+	stop("sigma must be a square matrix")
+  }
+	
+  if (length(mean) != NROW(sigma)) 
+  {
+	stop("mean and sigma have non-conforming size")
+  }
+  
+  if (det(as.matrix(sigma)) <= 0) {
+    stop("sigma must be positive definite")
+  }
+	
+  if (any(lower>=upper))
+  {
+    stop("lower must be smaller than or equal to upper (lower<=upper)")
+  }
+  
+  if (n < 1 || !is.numeric(n) || length(n) > 1)
+  {
+    stop("n must be a integer scalar > 0")
+  }
+	
+  # dimension of X
+  d <- length(mean)
+  
+  # number of burn-in samples
+  S <- burn.in.samples
+  if (!is.null(S))
+  {
+	if (S < 0) stop("number of burn-in samples must be non-negative")   
+  }
+	
+  # Take start value given by user or determine from lower and upper	
+  if (!is.null(start.value))
+  {
+    if (length(mean) != length(start.value)) stop("mean and start value have non-conforming size")
+	if (any(start.value<lower || start.value>upper)) stop("start value is not inside support region") 
+	x0 <- start.value 
+  }
+  else
+  {
+    # Start value from support region, may be lower or upper bound, if they are finite, 
+	# if both are infinite, we take 0.
+	x0  <- ifelse(is.finite(lower), lower, ifelse(is.finite(upper), upper, 0))
+  }
+  
+  # actual number of samples to draw (including burn-in samples)
+  n = n + S
+  
+  # Sample from univariate truncated normal distribution which is very fast.
+  if (d == 1)
+  {
+    X = rtnorm.gibbs(n, mu=mean[1], sigma=sigma[1,1], a=lower[1], b=upper[1])
+    return(X)
+  }
+      
+  # Ergebnismatrix (n x d)
+  X <- matrix(0, n, d)
+  
+  # Call to Fortran subroutine
+  ret <- .Fortran("rtmvnormgibbs",
+                              n     = as.integer(n),
+                              d     = as.integer(d),
+                              mean  = as.double(mean),
+                              sigma = as.double(sigma),
+                              lower = as.double(lower), 
+                              upper = as.double(upper),
+                              x0    = as.double(x0),
+                              X     = as.double(X), 
+                              NAOK=TRUE, PACKAGE="tmvtnorm")
+  X = matrix(ret$X, ncol=d, byrow=TRUE)
+  
   # if number of burn-in samples has been given, discard burn-in samples
   if (S > 0)
   {

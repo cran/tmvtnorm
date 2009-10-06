@@ -36,7 +36,7 @@ ptmvnorm(lowerx, upperx, mean=rep(0, length(lowerx)), sigma,
 
 The computation of truncated multivariate normal probabilities and densities is done using conditional probabilities 
 from the standard/untruncated multivariate normal distribution. 
-So we refer to the documentation of the mvtnorm package and the methodology is described in
+So we refer to the documentation of the \code{mvtnorm} package and the methodology is described in
 Genz (1992, 1993).
 
 }

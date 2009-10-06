@@ -60,7 +60,8 @@ qtmvnorm.marginal(p,
 }
 \seealso{\code{\link{ptmvnorm}}, \code{\link[mvtnorm]{pmvnorm}}}
 \examples{
-# finite dimensional distribution of the Geometric Brownian Motion log-returns with truncation
+# finite dimensional distribution of the Geometric Brownian Motion log-returns 
+# with truncation
 
 # volatility p.a.
 sigma=0.4
@@ -84,7 +85,8 @@ a = rep(-Inf, 3)
 b = c(0, 0, Inf)
 
 # quantile of the t_1 returns
-qtmvnorm.marginal(p=0.95, interval = c(-10, 10), tail = "lower.tail", n=1, mean  = mu, sigma = Sigma, lower=a, upper=b)
+qtmvnorm.marginal(p=0.95, interval = c(-10, 10), tail = "lower.tail", n=1, 
+  mean  = mu, sigma = Sigma, lower=a, upper=b)
 }
 
 \keyword{distribution}

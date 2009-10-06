@@ -128,7 +128,7 @@ mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), low
 # @param mean Mittelwertvektor (k x 1)
 # @param sigma Kovarianzmatrix (k x k)
 # @param lower, upper obere und untere Trunkierungspunkte (k x 1)
-mtmvnorm.quadrature <- function(mean, sigma, lower, upper)
+mtmvnorm.quadrature <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), lower = rep(-Inf, length = length(mean)), upper = rep( Inf, length = length(mean)))
 {
   k       = length(mean)
   
@@ -140,7 +140,7 @@ mtmvnorm.quadrature <- function(mean, sigma, lower, upper)
 
   variance <- function(x, n=1)
   {
-    (x - m.integration[n])^2 * dtmvnorm.marginal(x, n=n, mean=mean, sigma=sigma, lower=a, upper=b)
+    (x - m.integration[n])^2 * dtmvnorm.marginal(x, n=n, mean=mean, sigma=sigma, lower=lower, upper=upper)
   }
 
   # Determine expectation from one-dimensional marginal distribution using integration

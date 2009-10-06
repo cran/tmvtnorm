@@ -9,8 +9,6 @@
 # @param upper oberer Trunkierungsvektor (n x 1) mit lower <= x <= upper
 dtmvnorm <- function(x, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), lower = rep(-Inf, length = length(mean)), upper = rep( Inf, length = length(mean)), log = FALSE)
 {
-  require(mvtnorm)
-  
   # Check inputs
   if (is.vector(x))
   {

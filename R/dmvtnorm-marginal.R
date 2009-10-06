@@ -15,8 +15,6 @@
 # Jack Cartinhour (1990): One-dimensional marginal density functions of a truncated multivariate normal density function
 # Communications in Statistics - Theory and Methods, Volume 19, Issue 1 1990 , pages 197 - 203
 
-library(mvtnorm)
-
 # Dichtefunktion für Randdichte f(xn) einer Truncated Multivariate Normal Distribution,
 # vgl. Jack Cartinhour (1990) "One-dimensional marginal density functions of a truncated multivariate normal density function"
 #
@@ -107,59 +105,4 @@ dtmvnorm.marginal <- function(xn, n=1, mean=rep(0, nrow(sigma)), sigma=diag(leng
    }
    1/p * 1/sqrt(2*pi*c_nn) * f_xn
 }
-
-
-# Bestimme die k1-dimensionale Randverteilungen durch numerische Integration mit adapt() und integrate()
-#
-# @param x Vektor der Länge k1 < k für die Randverteilung
-# @param n Vektor der Länge k1 < k für die Randverteilung mit den Indizes (1..k)
-dtmvnorm.marginal.integration <- function(x, n, mean, sigma, lower, upper)
-{
-  k  = length(mean)
-  
-  # Anzahl der Dimensionen der Randdichte
-  k1 = length(x)
-  # Anzahl der Dimensionen/Variablen, in denen integriert werden soll/die rausintegriert werden sollen k1 + k2 = k
-  k2 = k - k1
-  
-  if (k1 >= k || k1 < 1) stop("length of x must be 1 <= x < k")
-  if (length(x) != length(n)) stop("length of x must be the same as length of n")
-  
-  # Skalierungsfaktor der Dichte
-  p = pmvnorm(lower=lower, upper=upper, mean=mu, sigma=sigma)
-  
-  # Dichtefunktion in k = k1 + k2 Dimensionen
-  fd = function(z)
-  {
-    y     = numeric(k)
-    y[n]  = x   # k1 Dimensionen der Randdichte
-    y[-n] = z   # k2 Dimensionen: Variablen, die rausintegriert werden
-    
-    res = dtmvnorm(y, mean, sigma, lower, upper)                  
-    cat("Evaluating function for z=",z," res=",res,"\n")
-    flush.console()
-    return(res)
-  }
-  
-  fdv = Vectorize(fd)
-  
-  # Integriere in k2 = k - k1 dimensionen, wenn k2 = 1, dann mit integrate(), sonst mit adapt()
-  if (k2 == 1)
-  {
-    res = integrate(fdv, lower=lower[-n], upper=upper[-n])
-  }
-  else
-  {
-    res = adapt(ndim=k2, lo = lower[-n], up = upper[-n], functn = fd)
-  }
-  return(res/p) 
-}
-
-
-#dtmvnorm.marginal.integration(x=c(0,0), n=c(1,2), mean, sigma, lower=a, upper=b)
-#dtmvnorm.marginal.integration(x=0, n=1, mean, sigma, lower=a, upper=b)
-#dtmvnorm.marginal(x=0, n=1, mean, sigma, lower=a, upper=b)
-#
-#dtmvnorm.marginal.integration(x=c(0,0), n=c(1,2), mean, sigma, lower=a, upper=b)
-
 

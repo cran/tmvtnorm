@@ -1,6 +1,6 @@
 Package: tmvtnorm
-Version: 0.7-2
-Date: 2009-08-25
+Version: 0.8-3
+Date: 2009-10-06
 Title: Truncated Multivariate Normal Distribution
 Author: Stefan Wilhelm <wilhelm@financial.com>
 Maintainer: Stefan Wilhelm <wilhelm@financial.com>
@@ -13,6 +13,6 @@ Description: Computes truncated multivariate normal probabilities,
         matrix) for the double-truncated case.
 License: GPL (>= 2)
 URL: http://www.r-project.org
-Packaged: 2009-08-25 21:26:35 UTC; stefan
+Packaged: 2009-10-06 19:55:00 UTC; stefan
 Repository: CRAN
-Date/Publication: 2009-08-26 12:39:25
+Date/Publication: 2009-10-07 07:48:53
