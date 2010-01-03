@@ -1,6 +1,5 @@
 useDynLib(tmvtnorm)
 import(stats)
-import(graphics)
 import(utils)
 import(mvtnorm)
 export(ptmvnorm)

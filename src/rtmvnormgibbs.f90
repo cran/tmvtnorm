@@ -8,12 +8,14 @@
 ! @param n Anzahl der MC-Wiederholungen
 ! @param d Dimension (d >= 2)
 ! @param x0 Startvektor
+! @param burnin Number of Burn-in samples to be discarded
+! @param thinning Thinning factor for thinning the Markov chain
 ! @return Rückgabewert X --> Vektor (n * d)
-subroutine rtmvnormgibbs(n, d, mean, sigma, lower, upper, x0, X)
+subroutine rtmvnormgibbs(n, d, mean, sigma, lower, upper, x0, burnin, thinning, X)
 
 IMPLICIT NONE
 
-integer :: n, d, i, j, k, l, ind = 0, error
+integer :: n, d, i, j, k, l, ind = 0, error, burnin, thinning
 
 ! subindex "-i"
 integer, dimension(d-1) :: minus_i
@@ -84,10 +86,15 @@ do i = 1,d
   sd(i)        = sqrt(sigma(i,i) - s2) ! (1 x d-1) * (d-1 x 1) --> sd[[i]] ist (1,1)
 end do
 
+! start value
 xr = x0
 
-!For all samples
-do j = 1,n
+! Actual number of samples to create:
+! #burn-in-samples + n * #thinning-factor
+
+!For all samples n times the thinning factor
+do j = 1,(burnin + n * thinning)
+
   ! For all dimensions
   do i = 1,d
     ! Berechnung von bedingtem Erwartungswert und bedingter Varianz:
@@ -109,8 +116,13 @@ do j = 1,n
     prob       = u * (Fb - Fa) + Fa
     q          = qnormr(prob, 0.0d0, 1.0d0, 1, 0)
     xr(i)      = mu_i + sd(i) * q
-    ind        = ind + 1
-    X(ind)     = xr(i)
+
+    ! Nur für j > burnin samples aufzeichnen, Default ist thinning = 1
+    ! bei Thinning nur jedes x-te Element nehmen
+    if (j > burnin .AND. mod(j - burnin,thinning) == 0) then
+      ind        = ind + 1
+      X(ind)     = xr(i)
+    end if
   end do
 end do
 

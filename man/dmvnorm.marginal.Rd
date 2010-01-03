@@ -1,6 +1,6 @@
 % --- Source file: dtmvnorm-marginal.Rd ---
 \encoding{latin1} 
-\name{dtmvnorm-marginal}
+\name{dtmvnorm.marginal}
 \alias{dtmvnorm.marginal}
 
 \title{One-dimensional marginal density functions from a Truncated Multivariate Normal distribution}
@@ -14,7 +14,8 @@ dtmvnorm.marginal(xn, n=1,
   mean= rep(0, nrow(sigma)), 
   sigma=diag(length(mean)), 
   lower=rep(-Inf, length = length(mean)), 
-  upper=rep( Inf, length = length(mean)))
+  upper=rep( Inf, length = length(mean)),
+  log=FALSE)
 }
 
 \arguments{
@@ -26,6 +27,7 @@ dtmvnorm.marginal(xn, n=1,
    default is \code{rep(-Inf, length = length(mean))}.}
  \item{upper}{Vector of upper truncation points,\\ 
    default is \code{rep( Inf, length = length(mean))}.}
+ \item{log}{Logical; if \code{TRUE}, densities d are given as log(d).}  
 }
 
 \details{

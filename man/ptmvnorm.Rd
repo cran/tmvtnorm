@@ -37,8 +37,10 @@ ptmvnorm(lowerx, upperx, mean=rep(0, length(lowerx)), sigma,
 The computation of truncated multivariate normal probabilities and densities is done using conditional probabilities 
 from the standard/untruncated multivariate normal distribution. 
 So we refer to the documentation of the \code{mvtnorm} package and the methodology is described in
-Genz (1992, 1993).
+Genz (1992, 1993) and Genz/Bretz (2009).
 
+For properties of the truncated multivariate normal distribution see for example Johnson/Kotz (1970)
+and Horrace (2005).
 }
 \value{
 The evaluated distribution function is returned with attributes
@@ -54,6 +56,9 @@ Genz, A. (1993). Comparison of methods for the computation of multivariate
 normal probabilities. \emph{Computing Science and Statistics}, \bold{25},
 400--405
 
+Genz, A. and Bretz, F. (2009). Computation of Multivariate Normal and t Probabilities. 
+\emph{Lecture Notes in Statistics}, Vol. \bold{195}, Springer-Verlag, Heidelberg.
+
 Johnson, N./Kotz, S. (1970). Distributions in Statistics: Continuous Multivariate Distributions
 \emph{Wiley & Sons}, pp. 70--73
 
@@ -62,6 +67,9 @@ Horrace, W. (2005). Some Results on the Multivariate Truncated Normal Distributi
 }
 
 \examples{
+ sigma=matrix(c(5, 0.8, 0.8, 1), 2, 2)
+ Fx=ptmvnorm(lowerx=c(-1,-1), upperx=c(0.5,0), mean=c(0,0), sigma=sigma, lower=c(-1,-1), upper=c(1,1))
 }
+
 \keyword{distribution}
 \keyword{multivariate}

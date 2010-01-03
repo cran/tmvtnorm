@@ -1,7 +1,7 @@
 \name{dtmvnorm.marginal2}
 \Rdversion{1.1}
 \alias{dtmvnorm.marginal2}
-%- Also NEED an '\alias' for EACH other topic documented here.
+
 \title{
 Bivariate marginal density functions from a Truncated Multivariate Normal distribution
 }
@@ -17,7 +17,8 @@ dtmvnorm.marginal2(xq, xr, q, r,
  mean = rep(0, nrow(sigma)), 
  sigma = diag(length(mean)), 
  lower = rep(-Inf, length = length(mean)), 
- upper = rep(Inf, length = length(mean)))
+ upper = rep(Inf, length = length(mean)),
+ log = FALSE)
 }
 
 \arguments{
@@ -31,6 +32,7 @@ dtmvnorm.marginal2(xq, xr, q, r,
    default is \code{rep(-Inf, length = length(mean))}.}
   \item{upper}{Vector of upper truncation points, 
    default is \code{rep( Inf, length = length(mean))}.}
+  \item{log}{Logical; if \code{TRUE}, densities d are given as log(d).} 
 }
 
 \details{

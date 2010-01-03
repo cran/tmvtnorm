@@ -20,7 +20,9 @@
 # @param sigma
 # @param lower
 # @param upper
-dtmvnorm.marginal2 <- function(xq, xr, q, r, mean=rep(0, nrow(sigma)), sigma=diag(length(mean)), lower=rep(-Inf, length = length(mean)), upper=rep( Inf, length = length(mean)))
+# @param log=FALSE
+dtmvnorm.marginal2 <- function(xq, xr, q, r, mean=rep(0, nrow(sigma)), sigma=diag(length(mean)), lower=rep(-Inf, length = length(mean)), 
+		  upper=rep( Inf, length = length(mean)), log=FALSE)
 {
   # Dimension
   n = nrow(sigma)
@@ -47,15 +49,17 @@ dtmvnorm.marginal2 <- function(xq, xr, q, r, mean=rep(0, nrow(sigma)), sigma=dia
   
   if (n == 2)
   {
-    if (xq < lower[q] | xq > upper[q] | xr < lower[r] | xr > upper[r] | is.infinite(xq) | is.infinite(xr))
-    {
-      return(0)
-    }
-    else
-    {
+    if (xq < lower[q] | xq > upper[q] | xr < lower[r] | xr > upper[r] | is.infinite(xq) | is.infinite(xr)) {
+	  density = 0
+    } else {
       sigma2=sigma[c(q,r),c(q,r)]
-      return (dmvnorm(x=c(xq, xr), mean=mean[c(q,r)], sigma=sigma2) / alpha)
+      density = dmvnorm(x=c(xq, xr), mean=mean[c(q,r)], sigma=sigma2) / alpha
     }
+	if (log == TRUE) {
+	  return(log(density))
+	} else {
+	  return(density)
+	}
   }
   
   # Standardabweichungen bestimmen
@@ -147,11 +151,16 @@ dtmvnorm.marginal2 <- function(xq, xr, q, r, mean=rep(0, nrow(sigma)), sigma=dia
               
   if (xq < lower[q] | xq > upper[q] | xr < lower[r] | xr > upper[r] | is.infinite(xq) | is.infinite(xr))
   {
-    return(0)
+    density = 0
   }
   else
   {
-    dmvnorm(x=c(xq, xr), mean=mean[c(q,r)], sigma=sigma2) * pmvnorm(lower=AQR, upper=BQR, sigma=RQR) / alpha
+	density = dmvnorm(x=c(xq, xr), mean=mean[c(q,r)], sigma=sigma2) * pmvnorm(lower=AQR, upper=BQR, sigma=RQR) / alpha
+  }
+  if (log == TRUE) {
+	  return(log(density))
+  } else {
+	  return(density)
   }
 }
 

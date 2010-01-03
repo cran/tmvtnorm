@@ -1,6 +1,21 @@
-Version 0.9-1 upcoming
-----------------------
+Upcoming
+--------
 # Bayesian estimation according to Griffiths (2002)
+
+Version 0.9-2 (30.12.2009/03.01.2009)
+--------------------------
+# Implementation of "thinning technique" for Gibbs sampling: Added parameter thinning=1 to rtmvnorm.gibbs() for thinning of Markov chains, 
+  i.e. reducing autocorrelations of random samples
+# Documenting additional arguments "thinning", "start.value" and "burn.in", for rmvtnorm.gibbs() 
+# Added parameter "burn-in" and "thinning" in the Fortran code for discarding burn-in samples and thinng the Markov chain. 
+# Added parameter log=FALSE to dtmvnorm.marginal()
+# Added parameter margin=NULL to dtmvnorm() as an interface/wrapper to marginal density functions dtmvnorm.marginal() and dtmvnorm.marginal2()
+# Code polishing and review
+# Function checkTmvArgs() for common checking of arguments
+# Added more RUnit tests
+# Makefile optimiert
+# CITATION file eingebunden/geändert
+
 
 Version 0.8-2 (30.09.2009)
 -----------------------------------

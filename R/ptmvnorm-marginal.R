@@ -8,31 +8,21 @@
 # @param lower,upper Trunkierungsvektor lower <= x <= upper
 ptmvnorm.marginal <- function(xn, n=1, mean=rep(0, nrow(sigma)), sigma=diag(length(mean)), lower=rep(-Inf, length = length(mean)), upper=rep( Inf, length = length(mean)))
 {
-   if (NROW(sigma) != NCOL(sigma)) {
-     stop("sigma must be a square matrix")
-   }
-
-   if (length(mean) != NROW(sigma)) {
-    stop("mean and sigma have non-conforming size")
-   }
-   
-   if (det(as.matrix(sigma)) <= 0) {
-    stop("sigma must be positive definite")
-   }
-	
-   if (any(lower>=upper))
-   {
-     stop("lower must be smaller than or equal to upper (lower<=upper)")
-   }
-   
-   # Anzahl der Dimensionen                
-   k = length(mean)
+   # check of standard tmvnorm arguments
+   cargs <- checkTmvArgs(mean, sigma, lower, upper)
+   mean  <- cargs$mean
+   sigma <- cargs$sigma
+   lower <- cargs$lower
+   upper <- cargs$upper
    
    if (n < 1 || n > length(mean) || !is.numeric(n) || length(n) > 1 ||  !n %in% 1:length(mean))
    {
      stop("n must be a integer scalar in 1..length(mean)")
    }
-
+   
+   # Anzahl der Dimensionen                
+   k = length(mean)
+   
    Fx     = numeric(length(xn))
    upper2 = upper
    alpha  = pmvnorm(lower = lower, upper = upper, mean = mean, sigma = sigma)

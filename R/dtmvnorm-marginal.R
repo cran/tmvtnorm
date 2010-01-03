@@ -23,7 +23,8 @@
 # @param mean (nx1) Mittelwertvektor
 # @param sigma (nxn)-Kovarianzmatrix
 # @param lower,upper Trunkierungsvektor lower <= x <= upper
-dtmvnorm.marginal <- function(xn, n=1, mean=rep(0, nrow(sigma)), sigma=diag(length(mean)), lower=rep(-Inf, length = length(mean)), upper=rep( Inf, length = length(mean)))
+dtmvnorm.marginal <- function(xn, n=1, mean=rep(0, nrow(sigma)), sigma=diag(length(mean)), lower=rep(-Inf, length = length(mean)), upper=rep( Inf, length = length(mean)),
+		                      log=FALSE)
 {
    #if (!is.scalar(xn))
    #{
@@ -46,22 +47,19 @@ dtmvnorm.marginal <- function(xn, n=1, mean=rep(0, nrow(sigma)), sigma=diag(leng
      stop("n must be a integer scalar in 1..length(mean)")
    }
    
-   # TODO : funktioniert nicht hier wg. Vektorisierung: a[n] <= x <= b[n], sonst Dichte 0
-   #if (!(lower[n]<=xn && xn<=upper[n]))
-   #{
-   #  return(0)
-   #}
-   
    # Univariater Fall, vgl. Greene (2003), S.573
    if (k == 1)
    {
-     prob <- pnorm(upper, mean=mean, sd=sqrt(sigma)) - pnorm(lower, mean=mean, sd=sqrt(sigma))
-     return(
-     ifelse(
-       lower[1]<=xn & xn<=upper[1], 
-       dnorm(xn, mean=mean, sd=sqrt(sigma)) / prob,
-       0
-     ))
+     prob    <- pnorm(upper, mean=mean, sd=sqrt(sigma)) - pnorm(lower, mean=mean, sd=sqrt(sigma))
+	 density <- ifelse(
+			     lower[1]<=xn & xn<=upper[1],
+			     dnorm(xn, mean=mean, sd=sqrt(sigma)) / prob,
+			     0)
+	 if (log == TRUE) {
+       return(log(density))
+     } else {
+	   return(density) 
+	 } 
    }
 
    # Kovarianzmatrix
@@ -103,6 +101,11 @@ dtmvnorm.marginal <- function(xn, n=1, mean=rep(0, nrow(sigma)), sigma=diag(leng
      
      f_xn[i] =  exp(-0.5*(xn[i]-mu_n)^2/c_nn) * pmvnorm(lower=lower[-n], upper=upper[-n], mean=m, sigma=A_1_inv)
    }
-   1/p * 1/sqrt(2*pi*c_nn) * f_xn
+   density = 1/p * 1/sqrt(2*pi*c_nn) * f_xn
+   if (log == TRUE) {
+	 return(log(density))
+   } else {
+	 return(density)
+   }
 }
 

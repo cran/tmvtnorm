@@ -18,22 +18,11 @@ mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), low
   N = length(mean)
   
   # Check input parameters
-  if (NROW(sigma) != NCOL(sigma)) {
-	stop("sigma must be a square matrix")
-  }
-	
-  if (length(mean) != NROW(sigma)) {
-	stop("mean and sigma have non-conforming size")
-  }
-  
-  if (NCOL(lower) != NCOL(upper)) {
-	stop("lower and upper have non-conforming size")
-  }
-	
-  if (any(lower>=upper))
-  {
-	stop("lower must be smaller than or equal to upper (lower<=upper)")
-  }
+  cargs <- checkTmvArgs(mean, sigma, lower, upper)
+  mean  <- cargs$mean
+  sigma <- cargs$sigma
+  lower <- cargs$lower
+  upper <- cargs$upper
 
   # Truncated Mean
   TMEAN <- numeric(N)
@@ -56,8 +45,8 @@ mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), low
   	sum = 0
   	for (q in 1:N)
   	{
-  		F_a[q] = dtmvnorm.marginal(xn=a[q], n = q, mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
-  		F_b[q] = dtmvnorm.marginal(xn=b[q], n = q, mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
+  		F_a[q] <- dtmvnorm.marginal(xn=a[q], n = q, mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
+  		F_b[q] <- dtmvnorm.marginal(xn=b[q], n = q, mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
   		sum = sum + sigma[i, q] * (F_a[q] - F_b[q])
   	}
   	TMEAN[i] = sum
