@@ -1,10 +1,12 @@
-\name{ptmvnorm.marginal}
+\name{ptmvtnorm.marginal}
 \Rdversion{1.1}
 \alias{ptmvnorm.marginal}
-\title{One-dimensional marginal CDF function from a Truncated Multivariate Normal distribution}
+\alias{ptmvt.marginal}
+\title{One-dimensional marginal CDF function for a Truncated Multivariate Normal and Student t distribution}
 \description{
-  This function computes the one-dimensional marginal probability function from a Truncated Multivariate Normal density function
-  using integration in \code{pmvnorm()}.
+  This function computes the one-dimensional marginal probability 
+  function from a Truncated Multivariate Normal and Student t density function
+  using integration in \code{pmvnorm()} and \code{pmvt()}.
 }
 \usage{
 ptmvnorm.marginal(xn, 
@@ -13,6 +15,13 @@ ptmvnorm.marginal(xn,
     sigma = diag(length(mean)), 
     lower = rep(-Inf, length = length(mean)), 
     upper = rep(Inf, length = length(mean)))
+ptmvt.marginal(xn, 
+    n = 1, 
+    mean = rep(0, nrow(sigma)), 
+    sigma = diag(length(mean)), 
+    df = 1, 
+    lower = rep(-Inf, length = length(mean)), 
+    upper = rep(Inf, length = length(mean)))    
 }
 \arguments{
   \item{xn}{Vector of quantiles to calculate the marginal probability for.}
@@ -23,18 +32,21 @@ ptmvnorm.marginal(xn,
                 problem is standardized. If neither \code{corr} nor
                 \code{sigma} is given, the identity matrix is used
                 for \code{sigma}.}
-  \item{lower}{Vector of lower truncation points,\\ 
+  \item{df}{degrees of freedom parameter}              
+  \item{lower}{Vector of lower truncation points, 
                  default is \code{rep(-Inf, length = length(mean))}.}
-  \item{upper}{Vector of upper truncation points,\\ 
+  \item{upper}{Vector of upper truncation points, 
                  default is \code{rep( Inf, length = length(mean))}.}
 }
 
 \details{
-  The one-dimensional marginal probability for index i is \eqn{F_i(x_i) = P(X_i \le x_i)}
+  The one-dimensional marginal probability for index i is 
+  \eqn{F_i(x_i) = P(X_i \le x_i)}{F_i(x_i) = P(X_i <= x_i)}
   \deqn{F_i(x_i) = \int_{a_1}^{b_1} \ldots \int_{a_{i-1}}^{b_{i-1}} \int_{a_{i}}^{x_i} \int_{a_{i+1}}^{b_{i+1}} \ldots \int_{a_k}^{b_k} f(x) dx 
                  = \alpha^{-1} \Phi_k(a, u, \mu, \Sigma)}
-  where \eqn{u = (b_1,\ldots,b_{i-1},x_i,b_{i+1},\ldots,b_k)'} is the upper integration bound and \eqn{\Phi_k} 
-  is the k-dimensional normal probability (i.e. function \code{pmvnorm()} in R package \code{mvtnorm}).  
+  where \eqn{u = (b_1,\ldots,b_{i-1},x_i,b_{i+1},\ldots,b_k)'}{u = (b_1,...,b_{i-1},x_i,b_{i+1},...,b_k)'} 
+  is the upper integration bound and \eqn{\Phi_k} 
+  is the k-dimensional normal probability (i.e. functions \code{pmvnorm()} and \code{pmvt()} in R package \code{mvtnorm}).  
 }
 
 \value{
@@ -43,7 +55,7 @@ ptmvnorm.marginal(xn,
 \author{Stefan Wilhelm <Stefan.Wilhelm@financial.com>}
 
 \examples{
-##
+## Example 1: Truncated multi-normal
 lower=c(-1,-1,-1)
 upper=c(1,1,1)
 mean=c(0,0,0)
@@ -56,7 +68,16 @@ X = rtmvnorm(n=1000, mean=c(0,0,0), sigma=sigma, lower=lower, upper=upper)
 x = seq(-1, 1, by=0.001)
 Fx = ptmvnorm.marginal(xn=x, n=1, mean=c(0,0,0), sigma=sigma, lower=lower, upper=upper) 
 
-plot(ecdf(X[,1]))
+plot(ecdf(X[,1]), main="marginal CDF for truncated multi-normal")
+lines(x, Fx, type="l", col="blue")
+
+## Example 2: Truncated multi-t
+X = rtmvt(n=1000, mean=c(0,0,0), sigma=sigma, df=2, lower=lower, upper=upper)
+
+x = seq(-1, 1, by=0.001)
+Fx = ptmvt.marginal(xn=x, n=1, mean=c(0,0,0), sigma=sigma, lower=lower, upper=upper) 
+
+plot(ecdf(X[,1]), main="marginal CDF for truncated multi-t")
 lines(x, Fx, type="l", col="blue")
 }
 

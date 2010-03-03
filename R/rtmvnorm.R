@@ -7,6 +7,9 @@
 #
 # Literatur:
 # (1) Kotecha (1999)
+# (2) Geweke (1991) : 
+# "Effcient simulation from the multivariate normal and Student-t distributions 
+# subject to linear constraints and the evaluation of constraint probabilities"
 ###############################################################################
 
 # Uses partly checks as in mvtnorm:::checkmvArgs!

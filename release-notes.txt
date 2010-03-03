@@ -2,6 +2,20 @@ Upcoming
 --------
 # Bayesian estimation according to Griffiths (2002)
 
+Version 1.0-1 (03.03.2010)
+--------------------------
+# Bugfix in rtmvt() für mean <> 0.
+# Version 0.10-4 umbenannt in Version 1.0-1
+
+Version 0.10-2 (22.02.2010)
+--------------------------
+# Added Gibbs sampling method for Student-t : rtmvt.gibbs()
+
+Version 0.10-1 (28.10.2010)
+--------------------------
+# Methods for the truncated multivariate t-Distribution : rtmvt(), dtmvt() und ptmvt()
+  and ptmvt.marginal()
+
 Version 0.9-2 (30.12.2009/03.01.2009)
 --------------------------
 # Implementation of "thinning technique" for Gibbs sampling: Added parameter thinning=1 to rtmvnorm.gibbs() for thinning of Markov chains, 

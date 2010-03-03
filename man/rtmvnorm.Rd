@@ -1,6 +1,6 @@
 \name{rtmvnorm}
 \alias{rtmvnorm}
-\title{Sampling Random Numbers From Truncated Multivariate Normal Distribution}
+\title{Sampling Random Numbers From The Truncated Multivariate Normal Distribution}
 \description{
   This function generates random numbers
   from the truncated multivariate normal
@@ -18,12 +18,12 @@ rtmvnorm(n, mean = rep(0, nrow(sigma)),
 }
 
 \arguments{
- \item{n}{Number of random points to be sampled. Must be an integer >= 1.}
+ \item{n}{Number of random points to be sampled. Must be an integer \eqn{\ge 1}{>= 1}.}
  \item{mean}{Mean vector, default is \code{rep(0, length = ncol(x))}.}
  \item{sigma}{Covariance matrix, default is \code{diag(ncol(x))}.}
- \item{lower}{Vector of lower truncation points,\\ 
+ \item{lower}{Vector of lower truncation points, 
               default is \code{rep(-Inf, length = length(mean))}.}
- \item{upper}{Vector of upper truncation points,\\ 
+ \item{upper}{Vector of upper truncation points, 
               default is \code{rep( Inf, length = length(mean))}.}
  \item{algorithm}{Method used, possible methods are rejection sampling ("rejection", default), 
                   the Fortan Gibbs sampler ("gibbs") 
@@ -175,15 +175,18 @@ legend("topleft",legend=c("Gibbs Sampling","Rejection Sampling"),
 ############################################
 
 sigma <- matrix(c(4,2,2,3), ncol=2)
-X1 <- rtmvnorm(n=10000, mean=c(1,2), sigma=sigma, upper=c(1,0), algorithm="rejection")
+X1 <- rtmvnorm(n=10000, mean=c(1,2), sigma=sigma, upper=c(1,0), 
+  algorithm="rejection")
 acf(X1)
 # no autocorrelation among random points
 
-X2 <- rtmvnorm(n=10000, mean=c(1,2), sigma=sigma, upper=c(1,0), algorithm="gibbs")
+X2 <- rtmvnorm(n=10000, mean=c(1,2), sigma=sigma, upper=c(1,0), 
+  algorithm="gibbs")
 acf(X2)
 # exhibits autocorrelation among random points
 
-X3 <- rtmvnorm(n=10000, mean=c(1,2), sigma=sigma, upper=c(1,0), algorithm="gibbs", thinning=2)
+X3 <- rtmvnorm(n=10000, mean=c(1,2), sigma=sigma, upper=c(1,0), 
+  algorithm="gibbs", thinning=2)
 acf(X3)
 # reduced autocorrelation among random points
 

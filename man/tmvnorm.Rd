@@ -23,15 +23,15 @@ dtmvnorm(x, mean = rep(0, nrow(sigma)),
  \item{x}{Vector or matrix of quantiles. If \code{x} is a matrix, each row is taken to be a quantile.}
  \item{mean}{Mean vector, default is \code{rep(0, nrow(sigma))}.}
  \item{sigma}{Covariance matrix, default is \code{diag(length(mean))}.}
- \item{lower}{Vector of lower truncation points,\\ 
+ \item{lower}{Vector of lower truncation points, 
               default is \code{rep(-Inf, length = length(mean))}.}
- \item{upper}{Vector of upper truncation points,\\ 
+ \item{upper}{Vector of upper truncation points, 
               default is \code{rep( Inf, length = length(mean))}.}
  \item{log}{Logical; if \code{TRUE}, densities d are given as log(d).}
  \item{margin}{if \code{NULL} then the joint density is computed (the default), 
                if \code{MARGIN=1} then the one-dimensional marginal density in variate \code{q} (\code{q = 1..length(mean)}) is returned, 
                if \code{MARGIN=c(q,r)} then the bivariate marginal density in variates \code{q} and \code{r} 
-               for \code{q,r = 1..length(mean)} and \eqn{q \ne r}{q <> r} is returned.}
+               for \code{q,r = 1..length(mean)} and \eqn{q \ne r}{q != r} is returned.}
 }
 
 \details{

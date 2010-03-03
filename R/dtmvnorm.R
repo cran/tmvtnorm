@@ -1,3 +1,4 @@
+source("R/rtmvnorm.R")
 # Dichtefunktion der Multivariaten Trunkierten Normalverteilung mit Trunkierungsvektor lower and upper
 #
 # vgl. Horrace (2005) "Some Results on the Multivariate Truncated Normal Distribution"
