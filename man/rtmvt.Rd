@@ -71,8 +71,8 @@ An earlier version of this paper is available at \url{http://www.biz.uiowa.edu/f
 ###########################################################	
 
 # Draw from multi-t distribution without truncation
-X1 <- rtmvt(n=10000, mean=rep(0, 3), df=2)
-X2 <- rtmvt(n=10000, mean=rep(0, 3), df=2, lower=c(-1,-1), upper=c(1,1))
+X1 <- rtmvt(n=10000, mean=rep(0, 2), df=2)
+X2 <- rtmvt(n=10000, mean=rep(0, 2), df=2, lower=c(-1,-1), upper=c(1,1))
 
 ###########################################################
 #

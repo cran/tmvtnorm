@@ -19,9 +19,20 @@ rtmvt <- function(n, mean = rep(0, nrow(sigma)),
   
   algorithm <- match.arg(algorithm)
   
-  # check of additional arguments
+  # check of standard tmvtnorm arguments
+  cargs <- checkTmvArgs(mean, sigma, lower, upper)
+  mean  <- cargs$mean
+  sigma <- cargs$sigma
+  lower <- cargs$lower
+  upper <- cargs$upper
+  
+  # check of additional arguments : n and df
   if (n < 1 || !is.numeric(n) || n != as.integer(n) || length(n) > 1) {
     stop("n must be a integer scalar > 0")
+  }
+  
+  if (df < 1 || !is.numeric(df) || df != as.integer(df) || length(df) > 1) {
+	  stop("df must be a integer scalar > 0")
   }
   
   if (algorithm == "rejection") {

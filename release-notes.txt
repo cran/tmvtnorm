@@ -2,6 +2,12 @@ Upcoming
 --------
 # Bayesian estimation according to Griffiths (2002)
 
+
+Version 1.0-2 (04.03.2010)
+--------------------------
+# Added input checks for rtmvt()
+# Added RUnit tests for rtmvt() and dtmvt().
+
 Version 1.0-1 (03.03.2010)
 --------------------------
 # Bugfix in rtmvt() für mean <> 0.
