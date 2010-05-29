@@ -3,8 +3,13 @@
 #
 # @param lower unterer Trunkierungsvektor (k x 1) mit lower <= x <= upper
 # @param upper oberer Trunkierungsvektor (k x 1) mit lower <= x <= upper
-ptmvt <- function(lowerx, upperx, mean=rep(0, length(lowerx)), sigma, df = 1, 
-		lower = rep(-Inf, length = length(mean)), upper = rep( Inf, length = length(mean)), 
+ptmvt <- function(
+    lowerx, 
+    upperx, 
+    mean=rep(0, length(lowerx)),
+    sigma, df = 1, 
+		lower = rep(-Inf, length = length(mean)), 
+    upper = rep( Inf, length = length(mean)), 
 		maxpts = 25000, abseps = 0.001, releps = 0)
 {
 	# check of standard tmvtnorm arguments
@@ -31,7 +36,7 @@ ptmvt <- function(lowerx, upperx, mean=rep(0, length(lowerx)), sigma, df = 1,
 	# Aufpassen: 
 	# Wir müssen garantieren, dass nur innerhalb des Support-Bereichs lower <= x <= upper integriert wird. Sonst kann Ergebnis >= 1 rauskommen.
 	# Wenn einzelne Komponenten von lowerx <= lower sind, dann von der Untergrenze lower integrieren. Analog für upperx >= upper
-	f <- pmvt(lower=pmax(lowerx, lower), upper=pmin(upperx, upper), delta=mean, sigma=sigma, df=df, maxpts = maxpts, abseps = abseps, releps = releps) / 
-			pmvt(lower=lower, upper=upper, delta=mean, sigma=sigma, df=df, maxpts = maxpts, abseps = abseps, releps = releps)
+	f <- pmvt(lower=pmax(lowerx, lower), upper=pmin(upperx, upper), delta=mean, sigma=sigma, df=df, maxpts = maxpts, abseps = abseps, releps = releps, type="shifted") / 
+			pmvt(lower=lower, upper=upper, delta=mean, sigma=sigma, df=df, maxpts = maxpts, abseps = abseps, releps = releps, type="shifted")
 	return(f)
 }

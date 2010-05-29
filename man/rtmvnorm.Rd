@@ -13,6 +13,7 @@ rtmvnorm(n, mean = rep(0, nrow(sigma)),
   sigma = diag(length(mean)), 
   lower=rep(-Inf, length = length(mean)), 
   upper=rep( Inf, length = length(mean)),
+  D = diag(length(mean)),
   algorithm=c("rejection", "gibbs", "gibbsR"),
   ...)
 }
@@ -25,6 +26,7 @@ rtmvnorm(n, mean = rep(0, nrow(sigma)),
               default is \code{rep(-Inf, length = length(mean))}.}
  \item{upper}{Vector of upper truncation points, 
               default is \code{rep( Inf, length = length(mean))}.}
+ \item{D}{Matrix for linear constraints, defaults to diagonal matrix.}              
  \item{algorithm}{Method used, possible methods are rejection sampling ("rejection", default), 
                   the Fortan Gibbs sampler ("gibbs") 
                   and the old Gibbs sampler implementation in R ("gibbsR").}
@@ -69,7 +71,13 @@ The arguments to be passed along with \code{algorithm="gibbs"} or \code{algorith
                  We create a Markov chain of length \code{(n*thinning)} and take only those
                  samples \code{j=1:(n*thinning)} where \code{j \%\% thinning == 0}  
                  Defaults to 1 (no thinning of the chain).}
-}                 
+}
+
+\bold{Sampling with linear constraints}\cr
+We extended the method to also simulate from a multivariate normal distribution
+subject to general linear constraints  \eqn{lower <= D x <= upper}. 
+For general D, both rejection sampling or Gibbs sampling according to Geweke (1991)
+are available.
 }
 
 \section{Warning}{
@@ -116,6 +124,11 @@ Jayesh H. Kotecha and Petar M. Djuric (1999). Gibbs Sampling Approach For Genera
 
 Cowles, M. and Carlin, B. (1996). Markov Chain Monte Carlo Convergence Diagnostics: A Comparative Review
 \emph{Journal of the American Statistical Association}, \bold{91}, 883--904
+
+Geweke, J. F. (1991). Effcient Simulation from the Multivariate Normal and Student-t Distributions 
+Subject to Linear Constraints 
+\emph{Computer Science and Statistics. Proceedings of the 23rd Symposium on the Interface. Seattle Washington, April 21-24, 1991}, 571--578
+
 }
 
 \examples{
@@ -200,7 +213,38 @@ lines(density(X3[,1], to=1), col="red")
 #
 ############################################
 
-X=rtmvnorm(100, mean=0, sigma=1, lower=-1, upper=1)
+X <- rtmvnorm(100, mean=0, sigma=1, lower=-1, upper=1)
+
+###########################################
+#
+# Example 5: Linear Constraints
+#
+############################################
+
+mean  <- c(0, 0)
+sigma <- matrix(c(10, 0,
+                   0, 1), 2, 2)
+
+# Linear Constraints
+#
+# a1 <= x1 + x2 <= b2
+# a2 <= x1 - x2 <= b2
+#
+# [ a1 ] <= [ 1   1 ] [ x1 ]   [b1]
+# [ a2 ]    [ 1  -1 ] [ x2 ]   [b2]
+a     <- c(-2, -2)
+b     <- c( 2,  2)
+D     <- matrix(c(1, 1,
+                  1, -1), 2, 2)                   
+
+X <- rtmvnorm(n=10000, mean, sigma, lower=a, upper=b, D=D, algorithm="gibbsR")
+plot(X, main="Gibbs sampling for multivariate normal with linear constraints according to Geweke (1991)")
+
+# mark linear constraints as lines
+for (i in 1:nrow(D)) {
+  abline(a=a[i]/D[i, 2], b=-D[i,1]/D[i, 2], col="red")
+  abline(a=b[i]/D[i, 2], b=-D[i,1]/D[i, 2], col="red")
+}
 
 }
 \keyword{distribution}

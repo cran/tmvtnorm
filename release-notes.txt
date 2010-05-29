@@ -1,7 +1,16 @@
 Upcoming
 --------
 # Bayesian estimation according to Griffiths (2002)
-# GMM estimation
+# EM algorithm
+
+Version 1.2-2 (25.05.2011)
+--------------------------
+# re-added GMM estimation in method gmm.tmvtnorm(). Works now with moment conditions.
+
+Version 1.2-1 (23.04.2011)
+--------------------------
+# rtmvnorm() works now with general linear constraints a<= Dx<=b, implemented with both rejection sampling and Gibbs sampling (Geweke (1991))
+# Bugfix in dtmvt() thanks to Jason Kramer: Using type="shifted" in pmvt(). TODO: check ptmvt() method!
 
 Version 1.1-5 (20.11.2010)
 --------------------------

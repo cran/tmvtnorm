@@ -32,7 +32,7 @@ dtmvt <- function(x, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), df 
 	
 	# conditional density
 	f <- ifelse(insidesupportregion, 
-	  dmvt(x, delta=mean, sigma=sigma, df=df, log=log) / pmvt(lower=lower, upper=upper, delta=mean, sigma=sigma, df=df), dv)
+	  dmvt(x, delta=mean, sigma=sigma, df=df, log=log) / pmvt(lower=lower, upper=upper, delta=mean, sigma=sigma, df=df, type="shifted"), dv)
 	return(f)
 }
 

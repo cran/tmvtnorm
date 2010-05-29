@@ -14,7 +14,9 @@
 
 rtmvt <- function(n, mean = rep(0, nrow(sigma)), 
   sigma = diag(length(mean)), 
-  df = 1, lower = rep(-Inf, length = length(mean)), upper = rep( Inf, length = length(mean)),
+  df = 1, 
+  lower = rep(-Inf, length = length(mean)), 
+  upper = rep( Inf, length = length(mean)),
   algorithm=c("rejection", "gibbs"), ...) {
   
   algorithm <- match.arg(algorithm)
@@ -132,7 +134,8 @@ rtmvt.rejection <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(m
 rtmvt.gibbs <- function (n=1, 
   mean=rep(0, ncol(sigma)), 
   sigma = diag(length(mean)), df=1, 
-  lower = rep(-Inf, length = length(mean)), upper = rep( Inf, length = length(mean)),
+  lower = rep(-Inf, length = length(mean)), 
+  upper = rep( Inf, length = length(mean)),
   burn.in.samples = 0,
   start.value = NULL,
   thinning = 1)

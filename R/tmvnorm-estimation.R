@@ -43,6 +43,37 @@ vech=function (x)
  v
 }
 
+# Hilfsfunktion : Operator für Namensgebung sigma_i.j (i <= j), d.h. wie vech(), nur Zeilenweise
+vech2 <- function (x)
+{
+  # PURPOSE: creates a column vector by stacking columns of x
+  #          on and below the diagonal
+  #----------------------------------------------------------
+  # USAGE:  v = vech2(x)
+  # where:  x = an input matrix
+  #---------------------------------------------------------
+  # RETURNS:
+  #         v = output vector containing stacked columns of x
+  #----------------------------------------------------------
+
+  # Written by Mike Cliff, UNC Finance  mcliff@unc.edu
+  # CREATED: 12/08/98
+  
+  #if(!is.matrix(x))
+  #{
+  #   
+  #}
+
+  rows    = nrow(x)
+  columns = ncol(x);
+  v = c();
+  for (i in 1:rows)
+  {
+   v = c(v, x[i,i:columns]);
+  }
+ v
+}
+
 # Hilfsfunktion : Inverser VECH() Operator
 inv_vech=function(v)
 {
@@ -167,14 +198,14 @@ mle.tmvnorm <- function(X,
   if (cholesky) {
     # if cholesky == TRUE use Cholesky decomposition of sigma
     # t(chol(sigma)) returns a lower triangular matrix which can be vectorized using vech() 
-    theta <- c(start$mu, vech(t(chol(start$sigma))))
+    theta <- c(start$mu, vech2(t(chol(start$sigma))))
   } else {
-    theta <- c(start$mu, vech(start$sigma))
+    theta <- c(start$mu, vech2(start$sigma))
   }
   # names for mean vector elements : mu_i
   nmmu     <- paste("mu_",1:n,sep="")
   # names for sigma elements : sigma_ij
-  nmsigma  <- paste("sigma_",vech(outer(1:n,1:n, paste, sep="")),sep="")
+  nmsigma  <- paste("sigma_",vech2(outer(1:n,1:n, paste, sep=".")),sep="")
   names(theta) <- c(nmmu, nmsigma)
   
   # negative log-likelihood-Funktion dynamisch definiert mit den formals(), 
@@ -208,7 +239,7 @@ mle.tmvnorm <- function(X,
     }
     
     # if sigma is not positive definite, return MAXVALUE
-    if (det(sigma) <= 0) {
+    if (det(sigma) <= 0 || any(diag(sigma) < 0)) {
       return(.Machine$integer.max)
     }
     

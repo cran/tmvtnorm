@@ -5,12 +5,35 @@
 ! "Gibbs sampling approach for generation of truncated multivariate Gaussian random variables",
 ! IEEE Computer Society, IEEE Computer Society, 1999, 1757-1760
 !
-! @param n Anzahl der MC-Wiederholungen
-! @param d Dimension (d >= 2)
-! @param x0 Startvektor
+! Code written by Stefan Wilhelm <wilhelm@financial.com> as part of the R package tmvtnorm.
+! (http://CRAN.R-project.org/package=tmvtnorm)
+!
+! To cite package tmvtnorm in publications use:
+!
+!  Stefan Wilhelm, Manjunath B G (2010). tmvtnorm: Truncated
+!  Multivariate Normal Distribution. R package version 1.1-5.
+!
+! A BibTeX entry for LaTeX users is
+!
+!  @Manual{,
+!    title = {{tmvtnorm}: Truncated Multivariate Normal Distribution},
+!    author = {Stefan Wilhelm and Manjunath B G},
+!    year = {2010},
+!    note = {R package version 1.1-5},
+!    url = {http://CRAN.R-project.org/package=tmvtnorm},
+!  }
+! 
+!
+! @param n number of random sample to generate by Gibbs sampling
+! @param d dimension (d >= 2)
+! @param mean mean vector of dimension d (d x 1)
+! @param sigma covariance matrix (d x d)
+! @param lower lower truncation points (d x 1)
+! @param upper upper truncation points (d x 1)
+! @param x0 Startvektor (d x 1)
 ! @param burnin Number of Burn-in samples to be discarded
-! @param thinning Thinning factor for thinning the Markov chain
-! @return Rückgabewert X --> Vektor (n * d)
+! @param thinning thinning factor for thinning the Markov chain
+! @return return value X --> vektor (n * d) --> can be coerced into a (n x d) matrix
 subroutine rtmvnormgibbs(n, d, mean, sigma, lower, upper, x0, burnin, thinning, X)
 
 IMPLICIT NONE

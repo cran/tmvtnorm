@@ -1,0 +1,69 @@
+2011-03-09
+
+Jason Kramer <jskramer@uci.edu>
+
+uses dtmvt()
+
+2011-03-08 Fentaw Abegaz <fentawabegaz@yahoo.com>
+
+"Dear Wilhelm and Manjunath,
+ 
+I really appreciate your work on truncated mv normal with the accompaning R code.
+ 
+I referred your paper on "MOMENTS CALCULATION FOR THE DOUBLE TRUNCATED MULTIVARIATE NORMAL 
+DENSITY" in my research work.
+
+Would you please inform me (if published) the details of publication.
+ 
+
+Best regards,
+Fentaw Abegaz"
+
+2011-02-07 
+
+Stefan Janse van Rensburg <S.JanseVanRensburg@ru.ac.za>
+Department of Statistics
+Rhodes University
+South Africa
+
+"I'm working on Bayesian regression models, 
+subject to linear inequality constraints. 
+My idea is to apply these models to index tracking problems, as an alternative to quadratic programming. 
+The main advantage is that it allows for richer inference."
+
+
+2011-01-20
+
+Paul W. Goedhart <paul.goedhart@wur.nl>
+Biometris,  Wageningen UR
+The Netherlands
+http://www.biometris.nl/
+
+"Note that this request is in the context of probabilistic modelling of chemical intake from food. 
+ In a Monte Carlo dietary risk assessment the exposure to chemicals from the diet is quantified as a distribution.  
+ This is accomplished by combining data on food consumption with data on concentrations of chemicals in foods. 
+ The chemical concentrations are often multivariate, i.e. more chemicals, with missing observations and observations 
+ which are below a detection limit. 
+ These chemical concentrations are modelled by means of a multivariate normal distribution, and parameters estimates 
+ are needed for proper dietary risk assessment."
+
+2011-01-24 Paul W. Goedhart <paul.goedhart@wur.nl>
+
+ "Many thanks for the code and the paper. I just ported the code to C# and it compares well with rejection sampling. 
+  I am currently starting the Gibbs sampler at the maximum of the distribution, i.e. at the mean or, when the mean is outside the limits, close to the limits. I am currently using a Burnin of 1000 and Thinning of 10; I haven’t yet looked at the autocorrelation of the individual random variables. 
+  Are these sensible values?
+  
+  With respect to the EM algorithm: when there are only missing values and no values below detection limits 
+  (such values are called non-detects), the EM algorithm can be used because the conditional expectations of an individual missing xi and of a missing product xi*xj are known. Note that EM = ML in this case. However expectations for xi*xj are very cumbersome when there are non-detects, at least that is that we are currently thinking. 
+  
+  An alternative to EM is SEM which imputes missing values and non-detects by means of simulated values (not expectations) 
+  from the conditional distributions. The imputed values are then used to estimate means and co(variances) and so on. 
+  This works as follows: suppose that we have {X1,X2,X3,X4,X5,X6} with X1=x1,X2=x2 observed,X3,X4 missing and X5,X6 below their detection 
+  limits. We first draw from the conditional distribution (X3,X4 | X1=x1,X2=x2) 
+  which is a simple bivariate normal and then we draw from (X5,X6 | X1=x1,X2=x2,X3=x3,X4=x4) which is a bivariate truncated normal. 
+  After a burnin, parameter estimates can be obtained by taking the mean of say the next 100 iterations. 
+
+  An alternative would be to use a fully Bayesian approach with priors for the means and the variance-covariance matrix."
+
+
+
