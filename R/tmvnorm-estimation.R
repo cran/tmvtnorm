@@ -59,11 +59,6 @@ vech2 <- function (x)
   # Written by Mike Cliff, UNC Finance  mcliff@unc.edu
   # CREATED: 12/08/98
   
-  #if(!is.matrix(x))
-  #{
-  #   
-  #}
-
   rows    = nrow(x)
   columns = ncol(x);
   v = c();
@@ -101,41 +96,6 @@ inv_vech=function(v)
     x[ i,   i:m] = v[((i-1)*(m-(i-2)*0.5)+1) : (i*(m-(i-1)*0.5))]
   }
   x  
-}
-
-if (FALSE) {
-
-# Named Vektor
-theta <- list(a=3, b=2)
-f <- function(theta) {
-  a <- theta[1]
-  b <- theta[2]
-  a+b
-}
-formals(f)
-
-f2          <- function(x) { a + b }
-formals(f2) <- theta
-formals(f2)
-
-f3          <- function(x) { 
-  theta <- unlist(formals(f3))
-  
-}
-
-f4 <- function(a=3, b=3, c=4) { 
-
-   nf <- names(formals())
-   call <- match.call()
-   print(str(call))
-   theta <- sapply(nf, function(x) {eval(parse(text=x))})
-   #print(get("b"))
-   
-   cat(theta,"\n")
-   return(theta)
-}
-f4()
-f4(a=2, b=5, c=1)
 }
 
 # 1. Maximum-Likelihood-Estimation of mu and sigma when truncation points are known
@@ -217,7 +177,7 @@ mle.tmvnorm <- function(X,
   # Da wir nicht vorher wissen, wie viele Parameter zu schätzen sind, definieren wir die formals()
   # dynamisch um
   # 
-  # @param dummy, dummy argument, will be overwritten by formals
+  # @param x dummy/placeholder argument, will be overwritten by formals() with list of skalar parameters
   negloglik <- function(x)
   {
     nf <- names(formals())
@@ -273,6 +233,7 @@ mle.tmvnorm <- function(X,
 
 # Beispiel:
 if (FALSE) {
+
 lower=c(-1,-1)
 upper=c(1, 2)
 mu   =c(0, 0)

@@ -5,15 +5,17 @@
   This function generates random numbers
   from the truncated multivariate normal
   distribution with mean equal to \code{mean} and covariance matrix
-  \code{sigma}, lower and upper truncation points \code{lower} and \code{upper}
+  \code{sigma} (or alternatively precision matrix \code{H}), 
+  lower and upper truncation points \code{lower} and \code{upper}
   with either rejection sampling or Gibbs sampling.
 }
 \usage{
 rtmvnorm(n, mean = rep(0, nrow(sigma)), 
-  sigma = diag(length(mean)), 
+  sigma = diag(length(mean)),
   lower=rep(-Inf, length = length(mean)), 
   upper=rep( Inf, length = length(mean)),
   D = diag(length(mean)),
+  H = NULL, 
   algorithm=c("rejection", "gibbs", "gibbsR"),
   ...)
 }
@@ -26,7 +28,8 @@ rtmvnorm(n, mean = rep(0, nrow(sigma)),
               default is \code{rep(-Inf, length = length(mean))}.}
  \item{upper}{Vector of upper truncation points, 
               default is \code{rep( Inf, length = length(mean))}.}
- \item{D}{Matrix for linear constraints, defaults to diagonal matrix.}              
+ \item{D}{Matrix for linear constraints, defaults to diagonal matrix.}
+ \item{H}{Precision matrix, default is \code{NULL}.}              
  \item{algorithm}{Method used, possible methods are rejection sampling ("rejection", default), 
                   the Fortan Gibbs sampler ("gibbs") 
                   and the old Gibbs sampler implementation in R ("gibbsR").}
@@ -78,6 +81,18 @@ We extended the method to also simulate from a multivariate normal distribution
 subject to general linear constraints  \eqn{lower <= D x <= upper}. 
 For general D, both rejection sampling or Gibbs sampling according to Geweke (1991)
 are available.
+
+\bold{Gibbs sampler and the use of the precision matrix}\cr
+Why is it important to have a random sampler that works with the precision matrix?
+Especially in Bayesian and spatial statistics, there are a number of high-dimensional 
+applications where the precision matrix \code{H} is readily available, 
+but is sometimes nearly singular and cannot be easily inverted to sigma.
+Additionally, it turns out that the Gibbs sampler formulas are much simpler
+in terms of the precision matrix than in terms of the covariance matrix. 
+See the details of the Gibbs sampler implementation in the package vignette or for example Geweke (2005), pp.171-172.
+(Thanks to Miguel Godinho de Matos from Carnegie Mellon University for pointing me to this.)
+Therefore, we now provide an interface for the direct use of the precision matrix \code{H}
+in \code{rtmvnorm()}. 
 }
 
 \section{Warning}{
@@ -129,15 +144,16 @@ Geweke, J. F. (1991). Effcient Simulation from the Multivariate Normal and Stude
 Subject to Linear Constraints 
 \emph{Computer Science and Statistics. Proceedings of the 23rd Symposium on the Interface. Seattle Washington, April 21-24, 1991}, 571--578
 
+Geweke, J. F. (2005). Contemporary Bayesian Econometrics and Statistics, \emph{Wiley & Sons}, pp.171--172
 }
 
 \examples{
-###########################################
+################################################################################
 #
 # Example 1: 
 # rejection sampling in 2 dimensions       
 #
-############################################
+################################################################################
 
 sigma <- matrix(c(4,2,2,3), ncol=2)
 x <- rtmvnorm(n=500, mean=c(1,2), sigma=sigma, upper=c(1,0))
@@ -147,27 +163,27 @@ plot(x, main="samples from truncated bivariate normal distribution",
 abline(v=1, lty=3, lwd=2, col="gray")
 abline(h=0, lty=3, lwd=2, col="gray")
 
-###########################################
+################################################################################
 #
 # Example 2: 
 # Gibbs sampler for 4 dimensions
 #
-############################################
+################################################################################
 
-C = matrix(0.8, 4, 4)
-diag(C)=rep(1, 4)
-lower = rep(-4, 4)
-upper = rep(-1, 4)
+C <- matrix(0.8, 4, 4)
+diag(C) <- rep(1, 4)
+lower <- rep(-4, 4)
+upper <- rep(-1, 4)
 
 # acceptance rate alpha
-alpha = pmvnorm(lower=lower, upper=upper, mean=rep(0,4), sigma=C)
+alpha <- pmvnorm(lower=lower, upper=upper, mean=rep(0,4), sigma=C)
 alpha
 
 # Gibbs sampler
-X1=rtmvnorm(n=20000, mean = rep(0,4), sigma=C, lower=lower, upper=upper, 
+X1 <- rtmvnorm(n=20000, mean = rep(0,4), sigma=C, lower=lower, upper=upper, 
   algorithm="gibbs", burn.in.samples=100)
 # Rejection sampling
-X2=rtmvnorm(n=5000, mean = rep(0,4), sigma=C, lower=lower, upper=upper)
+X2 <- rtmvnorm(n=5000, mean = rep(0,4), sigma=C, lower=lower, upper=upper)
 
 colMeans(X1)
 colMeans(X2)
@@ -179,13 +195,13 @@ lines(density(X2[,1], from=lower[1], to=upper[1]), col="blue", lwd=2)
 legend("topleft",legend=c("Gibbs Sampling","Rejection Sampling"), 
   col=c("red","blue"), lwd=2, bty="n")
 
-###########################################
+################################################################################
 #
 # Example 3: 
 # Autocorrelation plot for Gibbs sampler
 # with and without thinning
 #
-############################################
+################################################################################
 
 sigma <- matrix(c(4,2,2,3), ncol=2)
 X1 <- rtmvnorm(n=10000, mean=c(1,2), sigma=sigma, upper=c(1,0), 
@@ -207,19 +223,19 @@ plot(density(X1[,1], to=1))
 lines(density(X2[,1], to=1), col="blue")
 lines(density(X3[,1], to=1), col="red")
 
-###########################################
+################################################################################
 #
 # Example 4: Univariate case
 #
-############################################
+################################################################################
 
 X <- rtmvnorm(100, mean=0, sigma=1, lower=-1, upper=1)
 
-###########################################
+################################################################################
 #
 # Example 5: Linear Constraints
 #
-############################################
+################################################################################
 
 mean  <- c(0, 0)
 sigma <- matrix(c(10, 0,
@@ -245,6 +261,21 @@ for (i in 1:nrow(D)) {
   abline(a=a[i]/D[i, 2], b=-D[i,1]/D[i, 2], col="red")
   abline(a=b[i]/D[i, 2], b=-D[i,1]/D[i, 2], col="red")
 }
+
+################################################################################
+#
+# Example 6: Using precision matrix H rather than sigma
+#
+################################################################################
+
+lower <- c(-1, -1)
+upper <- c(1, 1)
+mean <- c(0.5, 0.5)
+sigma <- matrix(c(1, 0.8, 0.8, 1), 2, 2)
+H <- solve(sigma)
+D <- matrix(c(1, 1, 1, -1), 2, 2)
+X <- rtmvnorm(n=1000, mean=mean, H=H, lower=lower, upper=upper, D=D, algorithm="gibbs")
+plot(X, main="Gibbs sampling with precision matrix and linear constraints")
 
 }
 \keyword{distribution}

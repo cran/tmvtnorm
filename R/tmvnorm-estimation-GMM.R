@@ -25,7 +25,15 @@
 # parameter vector tet = c(mu, vech(sigma)), length K
 # @param tet named parameter vector theta = c(mu, vech(sigma))
 # @param x data matrix (T x N)
-gmultiLee <- function(tet, x, lower, upper, l_max = ceiling((ncol(x)+1)/2), cholesky=FALSE) {
+gmultiLee <- function(tet, fixed=c(), fullcoefnames, x, lower, upper, l_max = ceiling((ncol(x)+1)/2), cholesky=FALSE) {
+
+ fullcoef        <- rep(NA, length(tet) + length(fixed))
+ names(fullcoef) <- fullcoefnames
+ if (any(!names(fixed) %in% names(fullcoef))) 
+   stop("some named arguments in 'fixed' are not arguments in parameter vector theta")
+ fullcoef[names(tet)]   <- tet
+ fullcoef[names(fixed)] <- fixed
+ 
  K     <- length(tet)      # Anzahl der zu schätzenden Parameter
  N     <- ncol(x)          # Anzahl der Dimensionen
  T     <- nrow(x)          # Anzahl der Beobachtungen
@@ -34,18 +42,24 @@ gmultiLee <- function(tet, x, lower, upper, l_max = ceiling((ncol(x)+1)/2), chol
  X     <- matrix(NA, T, (l_max+1)*N) # Rückgabematrix mit den Momenten
 
  # Parameter mean/sigma aus dem Parametervektor tet extrahieren
- mean <- tet[1:N]
+ mean <- fullcoef[1:N]
  # Matrix für sigma bauen
  if (cholesky) {
-   L <- inv_vech(tet[-(1:N)])
+   L <- inv_vech(fullcoef[-(1:N)])
    L[lower.tri(L, diag=FALSE)] <- 0  # L entspricht jetzt chol(sigma), obere Dreiecksmatrix
    sigma <- t(L) %*% L
  } else {
-   sigma <- inv_vech(tet[-(1:N)])
+   sigma <- inv_vech(fullcoef[-(1:N)])
  }
  
- #cat("Call to gmulti with tet=",tet," sigma=",sigma," det(sigma)=",det(sigma),"\n")
+ #cat("Call to gmultiLee with tet=",tet," sigma=",sigma," det(sigma)=",det(sigma),"\n")
  #flush.console()
+ 
+ # if sigma is not positive definite we return some maximum value
+ if (det(sigma) <= 0 || any(diag(sigma) < 0)) {
+   X     <- matrix(+Inf, T, N + N * (N+1) / 2)
+   return(X)
+ }
   
  sigma_inv <- solve(sigma) # inverse Kovarianzmatrix
   
@@ -56,8 +70,8 @@ gmultiLee <- function(tet, x, lower, upper, l_max = ceiling((ncol(x)+1)/2), chol
  for (i in 1:N)
  {
     # one-dimensional marginal density in dimension i
-    F_a[i]  = dtmvnorm.marginal(lower[i], n=i, mean=mean, sigma=sigma, lower=lower, upper=upper)
-    F_b[i]  = dtmvnorm.marginal(upper[i], n=i, mean=mean, sigma=sigma, lower=lower, upper=upper)
+    F_a[i]  <- dtmvnorm.marginal(lower[i], n=i, mean=mean, sigma=sigma, lower=lower, upper=upper)
+    F_b[i]  <- dtmvnorm.marginal(upper[i], n=i, mean=mean, sigma=sigma, lower=lower, upper=upper)
  }
  
  k <- 1   
@@ -126,6 +140,7 @@ gmultiManjunathWilhelm <- function(tet, fixed=c(), fullcoefnames, x, lower, uppe
  }
  
  # Determine moments (mu, sigma) for parameters mean/sigma 
+ # experimental: moments <- mtmvnorm(mean=mean, sigma=sigma, lower=lower, upper=upper, doCheckInputs=FALSE)
  moments <- mtmvnorm(mean=mean, sigma=sigma, lower=lower, upper=upper)
  
  # Momentenbedingungen für die Elemente von mean : mean(x)
@@ -154,6 +169,7 @@ gmultiManjunathWilhelm <- function(tet, fixed=c(), fullcoefnames, x, lower, uppe
 # @param lower, upper truncation points
 # @param start list of start values for mu and sigma
 # @param fixed a list of fixed parameters
+# @param method either "ManjunathWilhelm" or "Lee" moment conditions
 # @param cholesky flag, if TRUE, we use the Cholesky decomposition of sigma as parametrization
 # @param ... additional parameters passed to gmm()
 gmm.tmvnorm <- function(X, 
@@ -161,11 +177,14 @@ gmm.tmvnorm <- function(X,
  upper=rep(+Inf, length = ncol(X)), 
  start=list(mu=rep(0,ncol(X)), sigma=diag(ncol(X))),
  fixed=list(),
+ method=c("ManjunathWilhelm","Lee"),
  cholesky=FALSE,
  ...
  ) {
  
- # check of standard tmvtnorm arguments
+  method <- match.arg(method)
+ 
+  # check of standard tmvtnorm arguments
   cargs       <- checkTmvArgs(start$mu, start$sigma, lower, upper)
   start$mu    <- cargs$mean
   start$sigma <- cargs$sigma
@@ -206,16 +225,69 @@ gmm.tmvnorm <- function(X,
   # since I do not know how to specify fixed=c() in gmm()
   theta2 <- theta[names(theta) %w/o% names(fixed)]
   
-  # define a wrapper function with only 2 arguments x and theta that will be invoked by
-  # gmm()
-  gmultiwrapper <- function(tet, x) {
-    #gmultiLee(tet=tet, x=x, lower=lower, upper=upper, cholesky=cholesky)
-    gmultiManjunathWilhelm(tet=tet, fixed=unlist(fixed), fullcoefnames=fullcoefnames, x=x, lower=lower, upper=upper, cholesky=cholesky)
+  # define a wrapper function with only 2 arguments theta and x (f(theta, x)) 
+  # that will be invoked by gmm()
+  gManjunathWilhelm <- function(tet, x) {
+    gmultiManjunathWilhelm(tet=tet, fixed=unlist(fixed), 
+      fullcoefnames=fullcoefnames, x=x, 
+      lower=lower, upper=upper, cholesky=cholesky)
   }
   
-  # TODO: Keeping certain parameters fixed like in mle(), e.g. with fixed=list(mu_1=0.5)
-  gmm.fit <- gmm(gmultiwrapper, x=X, t0=theta2, ...)
+  # TODO: Allow for l_max parameter for Lee moment conditions
+  gLee <- function(tet, x) {
+    gmultiLee(tet = tet, fixed = unlist(fixed), 
+      fullcoefnames = fullcoefnames, x = x, 
+      lower = lower, upper = upper, cholesky = cholesky)
+  }
+  
+  if (method == "ManjunathWilhelm") {
+    gmm.fit <- gmm(gManjunathWilhelm, x=X, t0=theta2, ...)
+  } else {
+    gmm.fit <- gmm(gLee, x=X, t0=theta2, ...)
+  }
   return(gmm.fit)
+}
+
+# deprecated
+# GMM mit Lee conditions
+gmm.tmvnorm2 <- function (X, lower = rep(-Inf, length = ncol(X)), upper = rep(+Inf, 
+    length = ncol(X)), start = list(mu = rep(0, ncol(X)), sigma = diag(ncol(X))), 
+    fixed = list(), cholesky = FALSE, ...) 
+{
+    cargs <- checkTmvArgs(start$mu, start$sigma, lower, upper)
+    start$mu <- cargs$mean
+    start$sigma <- cargs$sigma
+    lower <- cargs$lower
+    upper <- cargs$upper
+    if (!is.matrix(X) || nrow(X) == 0) {
+        stop("Data matrix X with at least one row required.")
+    }
+    n <- length(lower)
+    if (NCOL(X) != n) {
+        stop("data matrix X has a non-conforming size. Must have ", 
+            length(lower), " columns.")
+    }
+    ind <- logical(nrow(X))
+    for (i in 1:nrow(X)) {
+        ind[i] = all(X[i, ] >= lower & X[i, ] <= upper)
+    }
+    if (!all(ind)) {
+        stop("some of the data points are not in the region lower <= X <= upper")
+    }
+    theta <- c(start$mu, vech2(start$sigma))
+    nmmu <- paste("mu_", 1:n, sep = "")
+    nmsigma <- paste("sigma_", vech2(outer(1:n, 1:n, paste, sep = ".")), 
+        sep = "")
+    names(theta) <- c(nmmu, nmsigma)
+    fullcoefnames <- names(theta)
+    theta2 <- theta[names(theta) %w/o% names(fixed)]
+    gmultiwrapper <- function(tet, x) {
+        gmultiLee(tet = tet, fixed = unlist(fixed), 
+            fullcoefnames = fullcoefnames, x = x, lower = lower, 
+            upper = upper, cholesky = cholesky)
+    }
+    gmm.fit <- gmm(gmultiwrapper, x = X, t0 = theta2, ...)
+    return(gmm.fit)
 }
 
 

@@ -1,9 +1,14 @@
 ! Gibbs sampling from a truncated multinormal distribution
 !
-! see Kotecha et al. (1999):
+! References 
+! 1. Kotecha et al. (1999):
 ! Kotecha, J. H. & Djuric, P. M.
 ! "Gibbs sampling approach for generation of truncated multivariate Gaussian random variables",
 ! IEEE Computer Society, IEEE Computer Society, 1999, 1757-1760
+!
+! 2. Geweke (2005): Contemporary Bayesian Econometrics and
+! Statistics. John Wiley and Sons, 2005, pp. 171-172
+!
 !
 ! Code written by Stefan Wilhelm <wilhelm@financial.com> as part of the R package tmvtnorm.
 ! (http://CRAN.R-project.org/package=tmvtnorm)
@@ -34,11 +39,11 @@
 ! @param burnin Number of Burn-in samples to be discarded
 ! @param thinning thinning factor for thinning the Markov chain
 ! @return return value X --> vektor (n * d) --> can be coerced into a (n x d) matrix
-subroutine rtmvnormgibbs(n, d, mean, sigma, lower, upper, x0, burnin, thinning, X)
+subroutine rtmvnormgibbscov(n, d, mean, sigma, lower, upper, x0, burnin, thinning, X)
 
 IMPLICIT NONE
 
-integer :: n, d, i, j, k, l, ind = 0, error, burnin, thinning
+integer :: n, d, i, j, k, l, ind = 0, burnin, thinning
 
 ! subindex "-i"
 integer, dimension(d-1) :: minus_i
@@ -84,9 +89,9 @@ do i = 1,d
   ! subindex "-i"
   minus_i  = (/ (j, j=1,i-1), (j, j=i+1,d) /)
 
-  S            = sigma(minus_i, minus_i) ! (d-1) x (d-1)
-  sigma_ii     = sigma(i,i)              ! 1 x 1
-  Sigma_i(i,:) = sigma(i, minus_i)       ! 1 x (d-1)
+  S            = sigma(minus_i, minus_i) ! Sigma_{-i,-i} : (d-1) x (d-1)
+  sigma_ii     = sigma(i,i)              ! Sigma_{i,i}   : 1 x 1
+  Sigma_i(i,:) = sigma(i, minus_i)       ! Sigma_{i,-i}  : 1 x (d-1)
 
   ! Matrix S --> S_inv umkopieren
   do k=1,(d-1)
@@ -151,4 +156,102 @@ end do
 
 ! reset R random number generator
 call rndend()
-end subroutine rtmvnormgibbs
+end subroutine rtmvnormgibbscov
+
+! @param n number of random sample to generate by Gibbs sampling
+! @param d dimension (d >= 2)
+! @param mean mean vector of dimension d (d x 1)
+! @param H precision matrix (d x d)
+! @param lower lower truncation points (d x 1)
+! @param upper upper truncation points (d x 1)
+! @param x0 Startvektor (d x 1)
+! @param burnin Number of Burn-in samples to be discarded
+! @param thinning thinning factor for thinning the Markov chain
+! @return return value X --> vektor (n * d) --> can be coerced into a (n x d) matrix
+subroutine rtmvnormgibbsprec(n, d, mean, H, lower, upper, x0, burnin, thinning, X)
+
+IMPLICIT NONE
+
+integer :: n, d, i, j, k, ind = 0, burnin, thinning
+
+! subindex "-i"
+integer, dimension(d-1) :: minus_i
+
+double precision :: unifrnd, qnormr, pnormr, u, q, prob, Fa, Fb, mu_i, s2
+double precision, dimension(d, d)    :: H
+! Liste von d mal 1 x (d-1) Matrizen = d x (d-1) Matrix  als H[i, -i]
+double precision, dimension(d, d-1)   :: P
+double precision, dimension(d)    :: H_inv_ii
+
+double precision, dimension(n*d), INTENT(INOUT) :: X
+double precision, dimension(d-1)     :: s3
+double precision, dimension(d)       :: x0, xr, mean, lower, upper, sd
+
+! initialise R random number generator
+call rndstart()
+! initialise Fortran random number generator
+! CALL RANDOM_SEED
+
+! SW: I do not know why, but we have to reset ind each time!!!
+! If we forget this line, ind will be incremented further and then Fortran crashes!
+ind  = 0
+
+! List of conditional variances sd(i) can be precalculated
+! Vector of conditional standard deviations sd(i | -i) = H_ii^{-1} = 1 / H[i, i] = sqrt(1 / diag(H))
+! does not depend on x[-i] and can be precalculated before running the chain.
+do i = 1,d
+  minus_i = (/ (k, k=1,i-1), (k, k=i+1,d) /)
+  H_inv_ii(i) = (1.0d0 / H(i, i)) ! H^{-1}(i,i) = 1 / H(i,i)
+  sd(i) = sqrt(H_inv_ii(i)) ! sd(i) is sqrt(H^{-1}(i,i))
+  P(i,:)  = H(i, minus_i)    ! 1 x (d-1)
+end do
+
+! start value
+xr = x0
+
+! Actual number of samples to create:
+! #burn-in-samples + n * #thinning-factor
+
+!For all samples n times the thinning factor
+do j = 1,(burnin + n * thinning)
+
+  ! For all dimensions
+  do i = 1,d
+    ! subindex "-i"
+    minus_i  = (/ (k, k=1,i-1), (k, k=i+1,d) /)
+
+    ! conditional mean mu[i] = E[i | -i] = mean[i] - H_ii^{-1} H[i,-i] (x[-i] - mean[-i])
+    !                    mu_i           <- mean[i]  (1 / H[i,i]) * H[i,-i] %*% (x[-i] - mean[-i])
+    s3(1:(d-1)) = xr(minus_i) - mean(minus_i)
+    s2 = 0
+    do k = 1,d-1
+      s2 = s2 + P(i, k) * s3(k)
+    end do
+    mu_i       = mean(i) - H_inv_ii(i) * s2
+
+    Fa         = pnormr(lower(i), mu_i, sd(i), 1, 0)
+    Fb         = pnormr(upper(i), mu_i, sd(i), 1, 0)
+    u          = unifrnd()
+    !call RANDOM_NUMBER(u)
+    !call dblepr("u=", 2, u, 1)
+    prob       = u * (Fb - Fa) + Fa
+    !call dblepr("prob=", 5, prob, 1)
+    q          = qnormr(prob, 0.0d0, 1.0d0, 1, 0)
+    !call dblepr("q=", 2, q, 1)
+    xr(i)      = mu_i + sd(i) * q
+    !call dblepr("x(i)=", 5, xr(i), 1)
+
+    ! Nur für j > burnin samples aufzeichnen, Default ist thinning = 1
+    ! bei Thinning nur jedes x-te Element nehmen
+    if (j > burnin .AND. mod(j - burnin,thinning) == 0) then
+      ind        = ind + 1
+      X(ind)     = xr(i)
+      !call intpr("ind=", 4, ind, 1)
+      !call dblepr("X(ind)=", 7, X(ind), 1)
+    end if
+  end do
+end do
+
+! reset R random number generator
+call rndend()
+end subroutine rtmvnormgibbsprec

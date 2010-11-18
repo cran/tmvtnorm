@@ -12,6 +12,7 @@ gmm.tmvnorm(X,
   upper = rep(+Inf, length = ncol(X)), 
   start = list(mu = rep(0, ncol(X)), sigma = diag(ncol(X))), 
   fixed = list(),
+  method=c("ManjunathWilhelm","Lee"),
   cholesky = FALSE,
   ...)
 }
@@ -23,6 +24,7 @@ gmm.tmvnorm(X,
               default is \code{rep( Inf, length = ncol(X))}.}
   \item{start}{Named list with elements \code{mu} (mean vector) and \code{sigma} (covariance matrix). Initial values for optimizer.}
   \item{fixed}{Named list. Parameter values to keep fixed during optimization.}
+  \item{method}{Which set of moment conditions used, possible methods are "ManjunathWilhelm" (default) and "Lee".}
   \item{cholesky}{if TRUE, we use the Cholesky decomposition of \code{sigma} as parametrization}
   \item{\dots}{Further arguments to pass to \code{\link{gmm}}}
 }
@@ -34,6 +36,12 @@ gmm.tmvnorm(X,
  \code{gmm.tmvnorm()} is a wrapper for the general GMM method \code{\link[gmm]{gmm}},
  so one does not have to specify the moment conditions.
  
+ \bold{Manjunath/Wilhelm moment conditions}\cr
+ Because the first and second moments can be computed thanks to the \code{\link{mtmvnorm}}
+ function, we can set up a method-of-moments estimator by equating the sample moments
+ to their population counterparts. This way we have an exactly identified case.
+ 
+ \bold{Lee (1979,1983) moment conditions}\cr
  The recursive moment conditions presented by Lee (1979,1983) are defined for \eqn{l=0,1,2,\ldots}
  as
  \deqn{
@@ -63,7 +71,11 @@ Lee, L.-F. (1979). On the first and second moments of the truncated multi-normal
 \emph{Economics Letters}, \bold{3}, 165--169
 
 Lee, L.-F. (1983). The determination of moments of the doubly truncated multivariate normal Tobit model.
-\emph{Economics Letters}, \bold{11}, 245--250 
+\emph{Economics Letters}, \bold{11}, 245--250
+
+Manjunath B G and Wilhelm, S. (2009). Moments Calculation For the Double Truncated Multivariate Normal Density. 
+Working Paper. Available at SSRN: \url{http://ssrn.com/abstract=1472153}
+ 
 }
 
 \seealso{
@@ -99,4 +111,13 @@ gmm.fit2 <- gmm.tmvnorm(X, lower=lower, upper=upper,
   start=list(mu=c(0.1, 0.1), 
   sigma=matrix(c(1, 0.4, 0.4, 1.8),2,2)))
 summary(gmm.fit2)
+
+# GMM estimation with Lee (1983) moment conditions
+gmm.fit3 <- gmm.tmvnorm(X, lower=lower, upper=upper, method="Lee")
+summary(gmm.fit3)
+confint(gmm.fit3)
+
+# MLE estimation for comparison
+mle.fit1 <- mle.tmvnorm(X, lower=lower, upper=upper)
+confint(mle.fit1)
 }

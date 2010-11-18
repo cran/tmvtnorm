@@ -1,65 +1,26 @@
+################################################################################
+#
 # Sampling from Truncated multivariate Gaussian distribution using 
 #
 # a) Rejection sampling
 # b) Gibbs sampler
+#
+# for both rectangular constraints a <= x <= b and general linear constraints
+# a <= Dx <= b. For D = I this implies rectangular constraints.
+# The method can be used using both covariance matrix sigma and precision matrix H.
 # 
 # Author: Stefan Wilhelm
 #
 # Literatur:
-# (1) Kotecha (1999)
-# (2) Geweke (1991) : 
+# (1) Jayesh H. Kotecha and Petar M. Djuric (1999) : 
+# "GIBBS SAMPLING APPROACH FOR GENERATION OF TRUNCATED MULTIVARIATE GAUSSIAN RANDOM VARIABLES"
+# (2) Geweke (1991): 
 # "Effcient simulation from the multivariate normal and Student-t distributions 
 # subject to linear constraints and the evaluation of constraint probabilities"
-###############################################################################
-
-# Uses partly checks as in mvtnorm:::checkmvArgs!
-checkTmvArgs <- function(mean, sigma, lower, upper)
-{
-	if (is.null(lower) || any(is.na(lower))) 
-		stop(sQuote("lower"), " not specified or contains NA")
-	if (is.null(upper) || any(is.na(upper))) 
-		stop(sQuote("upper"), " not specified or contains NA")
-	if (!is.numeric(mean) || !is.vector(mean)) 
-		stop(sQuote("mean"), " is not a numeric vector")
-	if (is.null(sigma) || any(is.na(sigma))) 
-		stop(sQuote("sigma"), " not specified or contains NA")
-	
-	if (!is.matrix(sigma)) {
-		sigma = as.matrix(sigma)
-	}
-	
-	if (NCOL(lower) != NCOL(upper)) {
-		stop("lower and upper have non-conforming size")
-	}
-	
-	if (!isSymmetric(sigma, tol = sqrt(.Machine$double.eps))) {
-		stop("sigma must be a symmetric matrix")
-	}
-	
-	if (NROW(sigma) != NCOL(sigma)) {
-		stop("sigma must be a square matrix")
-	}
-	
-	if (length(mean) != NROW(sigma)) {
-		stop("mean and sigma have non-conforming size")
-	}
-	
-	if (det(sigma) <= 0) {
-		stop("sigma must be positive definite")
-	}
-	
-	if (length(lower) != length(mean) || length(upper) != length(mean)) {
-		stop("mean, lower and upper must have the same length")
-	}
-	
-	if (any(lower>=upper)) {
-		stop("lower must be smaller than or equal to upper (lower<=upper)")
-	}
-	
-	# checked arguments
-	cargs <- list(mean=mean, sigma=sigma, lower=lower, upper=upper)
-	return(cargs)
-}
+# (3) John Geweke (2005): Contemporary Bayesian Econometrics and Statistics, Wiley, pp.171-172
+# (4) Wilhelm (2011) package vignette to package "tmvtnorm"
+#
+################################################################################
 
 # Erzeugt eine Matrix X (n x k) mit Zufallsrealisationen aus einer Trunkierten Multivariaten Normalverteilung mit k Dimensionen
 # über Rejection Sampling oder Gibbs Sampler aus einer Multivariaten Normalverteilung
@@ -70,14 +31,16 @@ checkTmvArgs <- function(mean, sigma, lower, upper)
 # @param lower unterer Trunkierungsvektor (k x 1) mit lower <= Dx <= upper
 # @param upper oberer Trunkierungsvektor (k x 1) mit lower <= Dx <= upper
 # @param D Matrix for linear constraints, defaults to diagonal matrix
+# @param H Precision matrix (k x k) if given
 # @param algorithm c("rejection", "gibbs", "gibbsR")
 rtmvnorm <- function(n, 
     mean = rep(0, nrow(sigma)), 
-    sigma = diag(length(mean)), 
+    sigma = diag(length(mean)),
     lower = rep(-Inf, length = length(mean)), 
     upper = rep( Inf, length = length(mean)),
-    D = diag(length(mean)), 
-		algorithm=c("rejection", "gibbs", "gibbsR"), ...)
+    D = diag(length(mean)),
+    H = NULL, 
+    algorithm=c("rejection", "gibbs", "gibbsR"), ...)
 {
   algorithm <- match.arg(algorithm)
   
@@ -88,6 +51,17 @@ rtmvnorm <- function(n,
   lower <- cargs$lower
   upper <- cargs$upper
   
+  if (!is.null(H) && sigma != diag(length(mean))) {
+   stop("Cannot give both covariance matrix sigma and precision matrix H arguments at the same time")
+  }
+  else if (!is.null(H)) {
+   # check precision matrix H if it is symmetric and positive definite
+   checkSymmetricPositiveDefinite(H, name="H")
+   # H explicitly given, we will override sigma later if we need sigma
+   # sigma <- solve(H)
+  } 
+  # else sigma explicitly or implicitly given
+    
   # check of additional arguments
   if (n < 1 || !is.numeric(n) || n != as.integer(n) || length(n) > 1) {
 	  stop("n must be a integer scalar > 0")
@@ -98,18 +72,31 @@ rtmvnorm <- function(n,
     stop("D must be a (n x n) matrix with full rank n!")
   }
   
-  if (algorithm == "rejection") {
-	  retval <- rtmvnorm.rejection(n, mean, sigma, lower, upper, D, ...)  
-  } else if (algorithm == "gibbs") {
-    if (!identical(D,diag(length(mean)))) {
-      stop("General D matrix is not available with algorithm=\"gibbs\". Please try algorithm=\"gibbsR\".")
-    }
-	  retval <- rtmvnorm.gibbs.Fortran(n, mean, sigma, lower, upper, ...)  
-  } else if (algorithm == "gibbsR") {
-    if (!identical(D,diag(length(mean)))) {
-      retval <- rtmvnorm.gibbs.Geweke(n, mean, sigma, lower, upper, D, ...)  
-    } else {  
-	    retval <- rtmvnorm.gibbs(n, mean, sigma, lower, upper, D, ...)  
+  if (!identical(D,diag(length(mean)))) {
+    # D <> I : general linear constraints
+    retval <- rtmvnorm.linear.constraints(n=n, mean=mean, sigma=sigma, H=H, lower=lower, upper=upper, D=D, ...)
+    return(retval)
+  } else {
+    # D == I : rectangular case
+    if (algorithm == "rejection") {
+      if (!is.null(H)) {
+        # precision matrix case H
+        retval <- rtmvnorm.rejection(n, mean, sigma=solve(H), lower, upper, ...)
+      } else {
+        # covariance matrix case sigma
+        retval <- rtmvnorm.rejection(n, mean, sigma, lower, upper, ...)
+      }
+    } else if (algorithm == "gibbs") {
+      # precision matrix case H vs. covariance matrix case sigma will be handled inside method 
+      retval <- rtmvnorm.gibbs.Fortran(n, mean, sigma, H, lower, upper, ...)
+    } else if (algorithm == "gibbsR") {
+      if (!is.null(H)) {
+        # precision matrix case H
+        retval <- rtmvnorm.gibbs.Precision(n, mean, H, lower, upper, ...)  
+      } else {
+        # covariance matrix case sigma
+        retval <- rtmvnorm.gibbs(n, mean, sigma, lower, upper, ...)  
+      }
     }
   }
   return(retval)
@@ -169,7 +156,7 @@ rtmvnorm.rejection <- function(n,
     ind <- logical(nproposals)
     for (i in 1:nproposals)
     {
-      ind[i] = all(X2[i,] >= lower & X2[i,] <= upper)
+      ind[i] <- all(X2[i,] >= lower & X2[i,] <= upper)
     } 
 
     # Anzahl der akzeptierten Samples in diesem Durchlauf
@@ -179,8 +166,8 @@ rtmvnorm.rejection <- function(n,
     if (length(numAcceptedSamples) == 0 || numAcceptedSamples == 0) next
     
     #cat("numSamplesAccepted=",numAcceptedSamples," numSamplesToDraw = ",numSamples,"\n")
-	numNeededSamples <- min(numAcceptedSamples, numSamples)
-	Y[(numAcceptedSamplesTotal+1):(numAcceptedSamplesTotal+numNeededSamples),] <- X[which(ind)[1:numNeededSamples],]
+	  numNeededSamples <- min(numAcceptedSamples, numSamples)
+	  Y[(numAcceptedSamplesTotal+1):(numAcceptedSamplesTotal+numNeededSamples),] <- X[which(ind)[1:numNeededSamples],]
         
     # Anzahl der akzeptierten Samples insgesamt
     numAcceptedSamplesTotal <- numAcceptedSamplesTotal + numAcceptedSamples
@@ -209,9 +196,6 @@ rtmvnorm.rejection <- function(n,
 # @param b upper truncation point
 rtnorm.gibbs <- function(n, mu=0, sigma=1, a=-Inf, b=Inf)
 {
-   # Draw from Gaussian Distribution	
-   #x <- rnorm(n, mu, sigma)
-   
    # Draw from Uni(0,1)
    F <- runif(n) 	
    
@@ -220,16 +204,19 @@ rtnorm.gibbs <- function(n, mu=0, sigma=1, a=-Inf, b=Inf)
    Fb <- pnorm(b, mu, sd=sigma)
    
    # Truncated Normal Distribution, see equation (6), but F(x) ~ Uni(0,1), 
-   # so we directly draw from Uni(0,1)...
-   #y  <-  mu + sigma * qnorm(pnorm(x)*(Fb - Fa) + Fa)
+   # so we directly draw from Uni(0,1) instead of doing:
+   # x <- rnorm(n, mu, sigma)
+   # y <-  mu + sigma * qnorm(pnorm(x)*(Fb - Fa) + Fa)
    y  <-  mu + sigma * qnorm(F * (Fb - Fa) + Fa)	
    
    y
 }
 
-# Gibbs Sampler für Truncated Multivariate Normal Distribution
-#
-# Jayesh H. Kotecha and Petar M. Djuric (1999) : GIBBS SAMPLING APPROACH FOR GENERATION OF TRUNCATED MULTIVARIATE GAUSSIAN RANDOM VARIABLES
+# Gibbs Sampler Implementation in R for Truncated Multivariate Normal Distribution
+# (covariance case with sigma)
+# Jayesh H. Kotecha and Petar M. Djuric (1999) : 
+# GIBBS SAMPLING APPROACH FOR GENERATION OF TRUNCATED MULTIVARIATE 
+# GAUSSIAN RANDOM VARIABLES
 #
 #
 # @param n Anzahl der Realisationen
@@ -237,17 +224,15 @@ rtnorm.gibbs <- function(n, mu=0, sigma=1, a=-Inf, b=Inf)
 # @param sigma Kovarianzmatrix (k x k) der Normalverteilung
 # @param lower unterer Trunkierungsvektor (k x 1) mit lower <= Dx <= upper
 # @param upper oberer Trunkierungsvektor (k x 1) mit lower <= Dx <= upper
-# @param D Matrix for linear constraints, defaults to diagonal matrix
 # @param burn.in number of burn-in samples to be discarded
 # @param start start value for Gibbs sampling
 # @param thinning
 rtmvnorm.gibbs <- function(n, 
     mean = rep(0, nrow(sigma)), 
-    sigma = diag(length(mean)), 
+    sigma = diag(length(mean)),
     lower = rep(-Inf, length = length(mean)), 
     upper = rep( Inf, length = length(mean)), 
-    D = diag(length(mean)),
-		burn.in.samples = 0, 
+    burn.in.samples = 0, 
     start.value = NULL, 
     thinning = 1)
 {
@@ -269,12 +254,12 @@ rtmvnorm.gibbs <- function(n,
   # Take start value given by user or determine from lower and upper	
   if (!is.null(start.value)) {
     if (length(mean) != length(start.value)) stop("mean and start value have non-conforming size")
-	if (any(start.value<lower || start.value>upper)) stop("start value is not inside support region") 
-	x0 <- start.value 
+	  if (any(start.value<lower || start.value>upper)) stop("start value is not inside support region") 
+	  x0 <- start.value 
   } else {
     # Start value from support region, may be lower or upper bound, if they are finite, 
-	# if both are infinite, we take 0.
-	x0  <- ifelse(is.finite(lower), lower, ifelse(is.finite(upper), upper, 0))
+	  # if both are infinite, we take 0.
+	  x0  <- ifelse(is.finite(lower), lower, ifelse(is.finite(upper), upper, 0))
   }
   
   # Sample from univariate truncated normal distribution which is very fast.
@@ -321,30 +306,131 @@ rtmvnorm.gibbs <- function(n,
       mu_i  <- mean[i]    + P[[i]] %*% (x[-i] - mean[-i])
       
       # Transformation
-	  F.tmp <- pnorm(c(lower[i], upper[i]), mu_i, sd[[i]])
-	  Fa    <- F.tmp[1]
+	    F.tmp <- pnorm(c(lower[i], upper[i]), mu_i, sd[[i]])
+	    Fa    <- F.tmp[1]
       Fb    <- F.tmp[2]
-	  x[i]  <- mu_i + sd[[i]] * qnorm(U[l] * (Fb - Fa) + Fa)
+	    x[i]  <- mu_i + sd[[i]] * qnorm(U[l] * (Fb - Fa) + Fa)
       l     <- l + 1
     }
 	
-	if (j > 0) {
-	  if (thinning == 1) {
-	    # no thinning, take all samples	except for burn-in-period
-	    X[j,] <- x
-	  }
-	  else if (j %% thinning == 0){
-	    X[j %/% thinning,] <- x	
-	  }
+	  if (j > 0) {
+	    if (thinning == 1) {
+	      # no thinning, take all samples	except for burn-in-period
+	      X[j,] <- x
+	    }
+	    else if (j %% thinning == 0){
+	      X[j %/% thinning,] <- x	
+	    }
     }
   }
   return(X)
 }
 
-# Versuch, die Gibbs Sampler Methode schneller zu machen mittels kompiliertem Fortran-Code
+# R-Implementation of Gibbs sampler with precision matrix H
+#
+# @param n number of random draws
+# @param mean Mittelwertvektor (k x 1) der Normalverteilung
+# @param H Precision matrix (k x k) der Normalverteilung
+# @param lower unterer Trunkierungsvektor (k x 1) mit lower <= x <= upper
+# @param upper oberer Trunkierungsvektor (k x 1) mit lower <= x <= upper
+# @param burn.in number of burn-in samples to be discarded
+# @param start start value for Gibbs sampling
+# @param thinning
+rtmvnorm.gibbs.Precision <- function(n,
+    mean = rep(0, nrow(H)),
+    H = diag(length(mean)),
+    lower = rep(-Inf, length = length(mean)),
+    upper = rep( Inf, length = length(mean)),
+    burn.in.samples = 0,
+    start.value = NULL,
+    thinning = 1)
+{
+  # We check only additional arguments like "burn.in.samples", "start.value" and "thinning"
+  if (thinning < 1 || !is.numeric(thinning) || length(thinning) > 1) {
+	  stop("thinning must be a integer scalar > 0")
+  }
+
+  # dimension of X
+  d <- length(mean)
+
+  # number of burn-in samples
+  S <- burn.in.samples
+  if (!is.null(S)) {
+	  if (S < 0) stop("number of burn-in samples must be non-negative")
+  }
+
+  # Take start value given by user or determine from lower and upper
+  if (!is.null(start.value)) {
+    if (length(mean) != length(start.value)) stop("mean and start value have non-conforming size")
+	  if (any(start.value<lower || start.value>upper)) stop("start value is not inside support region")
+	  x0 <- start.value
+  } else {
+    # Start value from support region, may be lower or upper bound, if they are finite,
+	  # if both are infinite, we take 0.
+	  x0  <- ifelse(is.finite(lower), lower, ifelse(is.finite(upper), upper, 0))
+  }
+
+  # Sample from univariate truncated normal distribution which is very fast.
+  if (d == 1) {
+    X <- rtnorm.gibbs(n, mu=mean[1], sigma=1/H[1,1], a=lower[1], b=upper[1])
+    return(X)
+  }
+
+  # Ergebnismatrix (n x k)
+  X <- matrix(NA, n, d)
+
+  # Draw from U ~ Uni(0,1) for all iterations we need in advance
+  U <- runif((S + n*thinning) * d)
+  l <- 1
+
+  # Vector of conditional standard deviations sd(i | -i) = H_ii^{-1} = 1 / H[i, i] = sqrt(1 / diag(H))
+  # does not depend on x[-i] and can be precalculated before running the chain.
+  sd <- sqrt(1 / diag(H))
+  
+  # start value of the chain
+  x <- x0
+
+  # Run chain from index (1 - #burn-in-samples):(n*thinning) and only record samples from j >= 1
+  # which discards the burn-in-samples
+  for (j in (1-S):(n*thinning))
+  {
+    # For all dimensions
+    for(i in 1:d)
+    {
+      # conditional mean mu[i] = E[i | -i] = mean[i] - H_ii^{-1} H[i,-i] (x[-i] - mean[-i])
+      mu_i  <- mean[i]    - (1 / H[i,i]) * H[i,-i] %*% (x[-i] - mean[-i])
+
+      # draw x[i | -i] from conditional univariate truncated normal distribution with
+      # TN(E[i | -i], sd(i | -i), lower[i], upper[i]) 
+	    F.tmp <- pnorm(c(lower[i], upper[i]), mu_i, sd[i])
+	    Fa    <- F.tmp[1]
+      Fb    <- F.tmp[2]
+	    x[i]  <- mu_i + sd[i] * qnorm(U[l] * (Fb - Fa) + Fa)
+      l     <- l + 1
+    }
+
+	  if (j > 0) {
+	    if (thinning == 1) {
+	     # no thinning, take all samples	except for burn-in-period
+	     X[j,] <- x
+	    }
+	    else if (j %% thinning == 0){
+	     X[j %/% thinning,] <- x
+	    }
+    }
+  }
+  return(X)
+}
+
+# Gibbs sampler with compiled Fortran code
+# Depending on, whether covariance matrix Sigma or precision matrix H 
+# is specified as parameter, we call either 
+# Fortran routine "rtmvnormgibbscov" oder "rtmvnormgibbsprec".
+#
 rtmvnorm.gibbs.Fortran <- function(n, 
     mean = rep(0, nrow(sigma)), 
-    sigma = diag(length(mean)), 
+    sigma = diag(length(mean)),
+    H     = NULL, 
     lower = rep(-Inf, length = length(mean)), 
     upper = rep( Inf, length = length(mean)), 
 		burn.in.samples = 0, start.value = NULL, thinning = 1)
@@ -373,7 +459,11 @@ rtmvnorm.gibbs.Fortran <- function(n,
   
   # Sample from univariate truncated normal distribution which is very fast.
   if (d == 1) {
-    X <- rtnorm.gibbs(n, mu=mean[1], sigma=sigma[1,1], a=lower[1], b=upper[1])
+    if (!is.null(H)) {
+      X <- rtnorm.gibbs(n, mu=mean[1], sigma=1 / sigma[1,1], a=lower[1], b=upper[1])
+    } else {
+      X <- rtnorm.gibbs(n, mu=mean[1], sigma=sigma[1,1], a=lower[1], b=upper[1])
+    }
     return(X)
   }
       
@@ -381,7 +471,21 @@ rtmvnorm.gibbs.Fortran <- function(n,
   X <- matrix(0, n, d)
   
   # Call to Fortran subroutine
-  ret <- .Fortran("rtmvnormgibbs",
+  if (!is.null(H)) {
+    ret <- .Fortran("rtmvnormgibbsprec",
+                              n     = as.integer(n),
+                              d     = as.integer(d),
+                              mean  = as.double(mean),
+                              H     = as.double(H),
+                              lower = as.double(lower), 
+                              upper = as.double(upper),
+                              x0    = as.double(x0),
+							  burnin   = as.integer(burn.in.samples),
+							  thinning = as.integer(thinning),
+                              X     = as.double(X), 
+                              NAOK=TRUE, PACKAGE="tmvtnorm")
+  } else {
+    ret <- .Fortran("rtmvnormgibbscov",
                               n     = as.integer(n),
                               d     = as.integer(d),
                               mean  = as.double(mean),
@@ -393,15 +497,16 @@ rtmvnorm.gibbs.Fortran <- function(n,
 							  thinning = as.integer(thinning),
                               X     = as.double(X), 
                               NAOK=TRUE, PACKAGE="tmvtnorm")
+  }
   X <- matrix(ret$X, ncol=d, byrow=TRUE)
   return(X)
 }
 
 # Gibbs sampling für Truncated Multivariate Normal Distribution 
-# with linear constraints
-# based on Geweke (1991) : 
+# with linear constraints based on Geweke (1991): 
+# This is simply a wrapper function around our rectangular sampling version...
 #
-# x ~ N(mu, sigma) and a <= Dx <= b
+# x ~ N(mu, sigma) subject to a <= Dx <= b
 #
 # alpha <= z <= beta 
 # mit alpha = a - D * mu, beta = b - D * mu
@@ -417,56 +522,117 @@ rtmvnorm.gibbs.Fortran <- function(n,
 # @param burn.in number of burn-in samples to be discarded
 # @param start start value for Gibbs sampling
 # @param thinning
-rtmvnorm.gibbs.Geweke <- 
+rtmvnorm.linear.constraints <- 
   function(n, 
   mean = rep(0, nrow(sigma)), 
-  sigma = diag(length(mean)), 
+  sigma = diag(length(mean)),
+  H = NULL, 
   lower = rep(-Inf, length = length(mean)), 
   upper = rep( Inf, length = length(mean)),
-  D  = diag(length(mean)),
-	burn.in.samples = 0, 
-  start.value = NULL, 
-  thinning = 1)
+  D  = diag(length(mean)), ...)
 {
-  # We check only additional arguments like "burn.in.samples", "start.value" and "thinning"
-  
-  if (thinning < 1 || !is.numeric(thinning) || length(thinning) > 1) {
-	  stop("thinning must be a integer scalar > 0")
-  }
-	
   # dimension of X
   d <- length(mean)
-  
-  # number of burn-in samples
-  S <- burn.in.samples
-  if (!is.null(S)) {
-	if (S < 0) stop("number of burn-in samples must be non-negative")   
-  }
   
   # check matrix D, must be n x n with rank n
   if (!is.matrix(D) || det(D) == 0) {
     stop("D must be a (n x n) matrix with full rank n!")
   }
   
-  # Parameter-Transformation
-  # a <= Dx <= b
+  # create truncated multi-normal samples in variable Z ~ N(0, T) 
+  # with alpha <= z <= beta 
+	
+  # Parameter-Transformation for given sigma:
+  # x ~ N(mean, sigma) subject to a <= Dx <= b
+  # define z = D x - D mu
   # alpha <= z <= beta 
   # mit alpha = a - D * mu
   #     beta  = b - D * mu
-  # z ~ N(0, T), T = D Sigma D'
+  # z ~ N(0, T), 
+  # T = D Sigma D'
   # x = mu + D^(-1) z
-  alpha <- lower - D %*% mean
-  beta  <- upper - D %*% mean
-  T     <- D %*% sigma %*% t(D)
-	
-	# create truncated multi-normal samples in variable Z ~ N(0, T) 
-  # with alpha <= z <= beta 
-	Z <- rtmvnorm.gibbs(n, mean=rep(0, d), sigma = T, lower=alpha, upper=beta,
-       burn.in.samples = burn.in.samples, start.value = start.value, 
-       thinning = thinning)
+  # Parameter-Transformation for given H:
+  # x ~ N(mean, H^{-1})
+  # precision matrix in z is:
+  # T^{-1} = D'^{-1} H D^{-1}    # (AB)^{-1} = B^{-1} %*% A^{-1}
+  alpha <- as.vector(lower - D %*% mean)
+  beta  <- as.vector(upper - D %*% mean)
+  Dinv  <- solve(D) # D^(-1)
+  
+  if (!is.null(H)) {
+    Tinv <- t(Dinv) %*% H %*% Dinv
+    Z <- rtmvnorm(n, mean=rep(0, d), sigma=diag(d), H=Tinv, lower=alpha, upper=beta, ...)
+  } else {
+    T     <- D %*% sigma %*% t(D)
+	  Z <- rtmvnorm(n, mean=rep(0, d), sigma=T, H=NULL, lower=alpha, upper=beta, ...)
+  }
 
   # For each z do the transformation
   # x = mu + D^(-1) z
-  X <- mean + Z %*% solve(D)
+  X <- sweep(Z %*% Dinv, 2, FUN="+", mean)
   return(X)
+}
+
+################################################################################
+
+if (FALSE) {
+
+checkSymmetricPositiveDefinite(matrix(1:4, 2, 2), name = "H")
+
+lower <- c(-1, -1)
+upper <- c(1, 1)
+mean <- c(0.5, 0.5)
+sigma <- matrix(c(1, 0.8, 0.8, 1), 2, 2)
+H <- solve(sigma)
+D <- matrix(c(1, 1, 1, -1), 2, 2)
+
+checkSymmetricPositiveDefinite(H, name = "H")
+
+# 1. covariance matrix sigma case
+# 1.1. rectangular case D == I
+X0 <- rtmvnorm(n=1000, mean, sigma, lower, upper, algorithm="rejection")
+X1 <- rtmvnorm(n=1000, mean=mean, sigma=sigma, lower=lower, upper=upper, algorithm="rejection")
+X2 <- rtmvnorm(n=1000, mean=mean, sigma=sigma, lower=lower, upper=upper, algorithm="gibbsR")
+X3 <- rtmvnorm(n=1000, mean=mean, sigma=sigma, lower=lower, upper=upper, algorithm="gibbs")
+
+par(mfrow=c(2,2))
+plot(X1)
+plot(X2)
+plot(X3)
+
+cov(X1)
+cov(X2)
+cov(X3)
+
+# 1.2. general linear constraints case D <> I
+X1 <- rtmvnorm(n=1000, mean=mean, sigma=sigma, lower=lower, upper=upper, D=D, algorithm="rejection")
+X2 <- rtmvnorm(n=1000, mean=mean, sigma=sigma, lower=lower, upper=upper, D=D, algorithm="gibbsR")
+X3 <- rtmvnorm(n=1000, mean=mean, sigma=sigma, lower=lower, upper=upper, D=D, algorithm="gibbs")
+
+par(mfrow=c(2,2))
+plot(X1)
+plot(X2)
+plot(X3)
+
+# 2. precision matrix case H
+# 2.1. rectangular case D == I
+X1 <- rtmvnorm(n=1000, mean=mean, H=H, lower=lower, upper=upper, algorithm="rejection")
+X2 <- rtmvnorm(n=1000, mean=mean, H=H, lower=lower, upper=upper, algorithm="gibbsR")
+X3 <- rtmvnorm(n=1000, mean=mean, H=H, lower=lower, upper=upper, algorithm="gibbs")
+
+par(mfrow=c(2,2))
+plot(X1)
+plot(X2)
+plot(X3)
+
+# 2.2. general linear constraints case D <> I
+X1 <- rtmvnorm(n=1000, mean=mean, H=H, lower=lower, upper=upper, D=D, algorithm="rejection")
+X2 <- rtmvnorm(n=1000, mean=mean, H=H, lower=lower, upper=upper, D=D, algorithm="gibbsR")
+X3 <- rtmvnorm(n=1000, mean=mean, H=H, lower=lower, upper=upper, D=D, algorithm="gibbs")
+
+par(mfrow=c(2,2))
+plot(X1)
+plot(X2)
+plot(X3)
+
 }

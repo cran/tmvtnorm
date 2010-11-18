@@ -1,7 +1,20 @@
 Upcoming
 --------
+# Parallel computing and Monte Carlo algorithms (see Rosenthal (2000)) and R package parallel
 # Bayesian estimation according to Griffiths (2002)
 # EM algorithm
+
+Version 1.3-1 (29.11.2011)
+--------------------------
+# Rewritten the Gibbs sampler in R/Fortran to allow for a precision matrix H instead of covariance matrix Sigma. This has 2 advantages:
+  1. The Gibbs sampler code becomes much leaner and easier to understand when stated in terms of precision matrix H. No more matrix inversions are necessary,
+     so for higher dimensions this is definitely also a performance gain.
+  2. In Bayesian statistics, people work with precision matrices rather than with covariance matrices. They often have high dimensions 
+     and sparse precision matrices which are hard to invert. 
+     So, when using precision matrix H directly, there is no need to invert nearly singular precision matrices and 
+     the Gibbs sampler is still powerfull with, say n=500.
+# Method of Moments and GMM: We included a method of moments estimator (Manjunath/Wilhelm (2009)) and a GMM estimator.
+
 
 Version 1.2-2 (25.05.2011)
 --------------------------

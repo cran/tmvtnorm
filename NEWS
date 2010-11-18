@@ -1,5 +1,21 @@
 User visible changes in tmvtnorm package
 
+changes in tmvtnorm  1.3-1 (2011-12-01)
+
+# Allow for the use of a precision matrix H rather than covariance matrix sigma in rtmvnorm() for both rejection and Gibbs sampling.
+  (requested by Miguel Godinho de Matos from Carnegie Mellon University)
+# Rewritten both the R and Fortran version of the Gibbs sampler. 
+# GMM estimation in gmm.tmvnorm(,method=c("ManjunathWilhelm","Lee")) can now be done using the Manjunath/Wilhelm and Lee moment conditions.
+
+
+changes in tmvtnorm 1.2-3 (2011-06-04)
+
+# rtmvnorm() works now with general linear constraints a<= Dx<=b, implemented with both rejection sampling and Gibbs sampling (Geweke (1991))
+# Added GMM estimation in gmm.tmvnorm()
+# Bugfix in dtmvt() thanks to Jason Kramer: Using type="shifted" in pmvt()
+  (reported by Jason Kramer [jskramer@uci.edu])
+
+
 changes in tmvtnorm  1.1-5 (2010-11-20)
 
 # Added Maximum Likelihood estimation method (MLE) mle.tmvtnorm()
