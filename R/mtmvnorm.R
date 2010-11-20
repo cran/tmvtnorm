@@ -13,7 +13,11 @@
 # @param sigma Kovarianzmatrix (k x k)
 # @param lower untere Trunkierungspunkte (k x 1)
 # @param upper obere Trunkierungspunkte (k x 1)
-mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), lower = rep(-Inf, length = length(mean)), upper = rep( Inf, length = length(mean)))
+# @param doComputeVariance flag whether to compute variance (for performance reasons)
+mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), 
+  lower = rep(-Inf, length = length(mean)), 
+  upper = rep( Inf, length = length(mean)),
+  doComputeVariance=TRUE)
 {
   N = length(mean)
   
@@ -38,24 +42,29 @@ mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), low
   # eindimensionale Randdichte
   F_a <- numeric(N)
   F_b <- numeric(N)
+  
+  # pre-calculate F_a[q] once
+  for (q in 1:N) {
+  	F_a[q] <- dtmvnorm.marginal(xn=a[q], n = q, mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
+ 		F_b[q] <- dtmvnorm.marginal(xn=b[q], n = q, mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
+ 	}
     	
   # 1. Bestimme E[X_i]
   for (i in 1:N)
   {
   	sum = 0
-  	for (q in 1:N)
+    for (q in 1:N)
   	{
-  		F_a[q] <- dtmvnorm.marginal(xn=a[q], n = q, mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
-  		F_b[q] <- dtmvnorm.marginal(xn=b[q], n = q, mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
   		sum = sum + sigma[i, q] * (F_a[q] - F_b[q])
   	}
   	TMEAN[i] = sum
   	# general mean case : TMEAN[i] = mean[i] + sum
   }
   
-  # 2. Bestimme E[X_i, X_j]
-  for (i in 1:N)
-  {
+  if (doComputeVariance) {
+   # 2. Bestimme E[X_i, X_j]
+   for (i in 1:N)
+   {
   	for (j in 1:N)
   	{
   		sum = 0
@@ -93,10 +102,13 @@ mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), low
   		TVAR[i, j] = sigma[i, j] + sum
   		#general mean case: TVAR[i, j] = mean[j] * TMEAN[i] + mean[i] * TMEAN[j] - mean[i] * mean[j] + sigma[i, j] + sum
   	}
-  }
+   }
     	
-  # 3. Bestimme Varianz Cov(X_i, X_j) = E[X_i, X_j] - E[X_i]*E[X_j] für (0, sigma)-case
-  TVAR = TVAR - TMEAN %*% t(TMEAN)
+   # 3. Bestimme Varianz Cov(X_i, X_j) = E[X_i, X_j] - E[X_i]*E[X_j] für (0, sigma)-case
+   TVAR = TVAR - TMEAN %*% t(TMEAN)
+  } else {
+   TVAR = NA
+  }
     	
   # 4. Rückverschiebung um +mean für (mu, sigma)-case
   TMEAN = TMEAN + mean

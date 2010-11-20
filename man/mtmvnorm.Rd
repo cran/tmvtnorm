@@ -10,7 +10,7 @@
   but extended to the double-truncated case with general mean and general covariance matrix.
 }
 \usage{
-mtmvnorm(mean, sigma, lower, upper)
+mtmvnorm(mean, sigma, lower, upper, doComputeVariance=TRUE)
 }
 
 \arguments{
@@ -20,6 +20,8 @@ mtmvnorm(mean, sigma, lower, upper)
               default is \code{rep(-Inf, length = length(mean))}.}
   \item{upper}{Vector of upper truncation points,\\ 
               default is \code{rep( Inf, length = length(mean))}.}
+  \item{doComputeVariance}{flag whether to compute the variance for users who are interested only in the mean. 
+                           Defaults to \code{TRUE} for backward compatibility.}            
 }
 
 \value{

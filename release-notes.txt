@@ -1,6 +1,38 @@
 Upcoming
 --------
 # Bayesian estimation according to Griffiths (2002)
+# GMM estimation
+
+Version 1.1-5 (20.11.2010)
+--------------------------
+# Fixed a bug with LAPACK and BLAS/FLIBS libraries:
+Prof. Ripley/Writing R extensions: "For portability, the macros @code{BLAS_LIBS} and @code{FLIBS} should always be included @emph{after} @code{LAPACK_LIBS}."
+# removed GMM estimation method gmm.tmvnorm(), since it does not seem to work well in the bivariate case. Will check it first before resubmitting it.
+
+Version 1.1-4 (10.10.2010)
+--------------------------
+# added GMM estimation method gmm.tmvnorm()
+# optimized mtmvnorm(): precalcuted F_a[i] in a separate loop which improved the computation of the mean, suggested by Miklos.Reiter@sungard.com
+# added a flag doComputeVariance (default TRUE), so users which are only interested in the mean, can compute
+  only the variance (BTW: this flag does not make sense for the mean, since the mean has to be calculated anyway.)   
+
+Version 1.1-3 (21.09.2010)
+--------------------------
+# bugfix/improvement in mle.tmvnorm() so that all arguments to mle() are expanded.
+
+
+Version 1.1-2 (01.09.2010)
+--------------------------
+# added box constraints parameters "lower.bounds"/"upper.bounds" to mle.tmvnorm() for the use with method "L-BFGS-B"
+# added cholesky=TRUE parameter for mle.tmvtnorm() for Cholesky decomposition of sigma
+
+
+Version 1.1-1 (18.07.2010)
+--------------------------
+# Added estimation methods : MLE in mle.tmvtnorm()
+# Added RUnit tests for mle.tmvtnorm()
+# Wrote package vignette for Maximum Likelihood estimation.
+# TODO: Optimierung von mtmvnorm()
 
 
 Version 1.0-2 (04.03.2010)
@@ -17,7 +49,7 @@ Version 0.10-2 (22.02.2010)
 --------------------------
 # Added Gibbs sampling method for Student-t : rtmvt.gibbs()
 
-Version 0.10-1 (28.10.2010)
+Version 0.10-1 (28.01.2010)
 --------------------------
 # Methods for the truncated multivariate t-Distribution : rtmvt(), dtmvt() und ptmvt()
   and ptmvt.marginal()
