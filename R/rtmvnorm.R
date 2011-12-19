@@ -23,6 +23,27 @@
 ################################################################################
 
 # Erzeugt eine Matrix X (n x k) mit Zufallsrealisationen aus einer Trunkierten Multivariaten Normalverteilung mit k Dimensionen
+# über Gibbs Sampler aus einer Multivariaten Normalverteilung
+#
+# @param n Anzahl der Realisationen
+# @param mean Mittelwertvektor (k x 1) der Normalverteilung
+# @param lower unterer Trunkierungsvektor (k x 1) mit lower <= x <= upper
+# @param upper oberer Trunkierungsvektor (k x 1) mit lower <= x <= upper
+# @param H Precision matrix (k x k) if given, defaults to identity matrix
+rtmvnorm.sparseMatrix <- function(n, 
+    mean = rep(0, nrow(H)), 
+    H = sparseMatrix(i=1:length(mean), j=1:length(mean), x=1),
+    lower = rep(-Inf, length = length(mean)), 
+    upper = rep( Inf, length = length(mean)),
+    ...)
+{
+  if (is.null(H) || !inherits(H, "sparseMatrix")) {
+    stop("H must be of class 'sparseMatrix'")
+  }
+  rtmvnorm.gibbs.Fortran(n, mean, sigma=NULL, H, lower, upper, ...)
+}
+
+# Erzeugt eine Matrix X (n x k) mit Zufallsrealisationen aus einer Trunkierten Multivariaten Normalverteilung mit k Dimensionen
 # über Rejection Sampling oder Gibbs Sampler aus einer Multivariaten Normalverteilung
 #
 # @param n Anzahl der Realisationen
@@ -54,7 +75,7 @@ rtmvnorm <- function(n,
   if (!is.null(H) && sigma != diag(length(mean))) {
    stop("Cannot give both covariance matrix sigma and precision matrix H arguments at the same time")
   }
-  else if (!is.null(H)) {
+  else if (!is.null(H) && !inherits(H, "sparseMatrix")) {
    # check precision matrix H if it is symmetric and positive definite
    checkSymmetricPositiveDefinite(H, name="H")
    # H explicitly given, we will override sigma later if we need sigma
@@ -423,10 +444,18 @@ rtmvnorm.gibbs.Precision <- function(n,
 }
 
 # Gibbs sampler with compiled Fortran code
-# Depending on, whether covariance matrix Sigma or precision matrix H 
+# Depending on, whether covariance matrix Sigma or precision matrix H (dense or sparse format) 
 # is specified as parameter, we call either 
-# Fortran routine "rtmvnormgibbscov" oder "rtmvnormgibbsprec".
+# Fortran routine "rtmvnormgibbscov" (dense covariance matrix sigma), 
+# "rtmvnormgibbsprec" (dense matrix H) or "rtmvnormgibbssparseprec" (sparse precision matrix H).
 #
+# @param H precision matrix in sparse triplet format (i, j, v)
+# Memory issues: We want to increase dimension d, and return matrix X will be (n x d)
+# so if we want to create a large number of random samples X (n x d) with high d then
+# we will probably also run into memory problems (X is dense). In most MCMC applications,
+# we only have to create a small number n in high dimensions, 
+# e.g. 1 random sample per iteration (+ burn-in-samples). 
+# In this case we will not experience any problems. Users should be aware of choosing n and d appropriately
 rtmvnorm.gibbs.Fortran <- function(n, 
     mean = rep(0, nrow(sigma)), 
     sigma = diag(length(mean)),
@@ -471,8 +500,9 @@ rtmvnorm.gibbs.Fortran <- function(n,
   X <- matrix(0, n, d)
   
   # Call to Fortran subroutine
-  if (!is.null(H)) {
-    ret <- .Fortran("rtmvnormgibbsprec",
+  if (!is.null(H)){
+    if (!inherits(H, "sparseMatrix")) {
+      ret <- .Fortran("rtmvnormgibbsprec",
                               n     = as.integer(n),
                               d     = as.integer(d),
                               mean  = as.double(mean),
@@ -484,6 +514,27 @@ rtmvnorm.gibbs.Fortran <- function(n,
 							  thinning = as.integer(thinning),
                               X     = as.double(X), 
                               NAOK=TRUE, PACKAGE="tmvtnorm")
+    } else { # H is given in sparse matrix representation
+      # TODO: Aufpassen, wenn irgendwann mal die Fortran sparsem-Library rausfliegt
+      # Es muss klar sein, dass nur die untere Dreiecksmatrix übergeben wird...
+      sH <- summary(H)
+      sH <- subset(sH, sH$i <= sH$j)  # get (i,j,v=x) triplet, but due to symmetry of H only lower triangular matrix
+      ret <- .Fortran("rtmvnormgibbssparseprec",
+                              n     = as.integer(n),
+                              d     = as.integer(d),
+                              mean  = as.double(mean),
+                              Hi    = as.integer(sH$i),
+                              Hj    = as.integer(sH$j),
+                              Hv    = as.double(sH$x),
+                              num_nonzero = as.integer(nrow(sH)),
+                              lower = as.double(lower), 
+                              upper = as.double(upper),
+                              x0    = as.double(x0),
+							                burnin   = as.integer(burn.in.samples),
+							                thinning = as.integer(thinning),
+                              X     = as.double(X), 
+                              NAOK=TRUE, PACKAGE="tmvtnorm")
+    }
   } else {
     ret <- .Fortran("rtmvnormgibbscov",
                               n     = as.integer(n),
@@ -501,6 +552,7 @@ rtmvnorm.gibbs.Fortran <- function(n,
   X <- matrix(ret$X, ncol=d, byrow=TRUE)
   return(X)
 }
+
 
 # Gibbs sampling für Truncated Multivariate Normal Distribution 
 # with linear constraints based on Geweke (1991): 

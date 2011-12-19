@@ -1,5 +1,12 @@
 User visible changes in tmvtnorm package
 
+changes in tmvtnorm  1.4-1 (2011-12-27)
+
+# Allow a sparse precision matrix H to be passed to rtmvnorm.sparseMatrix() which allows
+  random number generation in very high dimensions (e.g. d >> 5000)
+# Rewritten the Fortran version of the Gibbs sampler for the 
+  use with sparse precision matrix H.
+
 changes in tmvtnorm  1.3-1 (2011-12-01)
 
 # Allow for the use of a precision matrix H rather than covariance matrix sigma in rtmvnorm() for both rejection and Gibbs sampling.

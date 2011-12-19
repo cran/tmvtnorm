@@ -1,5 +1,6 @@
 \name{rtmvnorm}
 \alias{rtmvnorm}
+\alias{rtmvnorm.sparseMatrix}
 \title{Sampling Random Numbers From The Truncated Multivariate Normal Distribution}
 \description{
   This function generates random numbers
@@ -18,6 +19,11 @@ rtmvnorm(n, mean = rep(0, nrow(sigma)),
   H = NULL, 
   algorithm=c("rejection", "gibbs", "gibbsR"),
   ...)
+rtmvnorm.sparseMatrix(n, mean = rep(0, nrow(H)), 
+    H = sparseMatrix(i=1:length(mean), j=1:length(mean), x=1),
+    lower = rep(-Inf, length = length(mean)), 
+    upper = rep( Inf, length = length(mean)),
+    ...)  
 }
 
 \arguments{
@@ -82,7 +88,7 @@ subject to general linear constraints  \eqn{lower <= D x <= upper}.
 For general D, both rejection sampling or Gibbs sampling according to Geweke (1991)
 are available.
 
-\bold{Gibbs sampler and the use of the precision matrix}\cr
+\bold{Gibbs sampler and the use of the precision matrix H}\cr
 Why is it important to have a random sampler that works with the precision matrix?
 Especially in Bayesian and spatial statistics, there are a number of high-dimensional 
 applications where the precision matrix \code{H} is readily available, 
@@ -92,7 +98,22 @@ in terms of the precision matrix than in terms of the covariance matrix.
 See the details of the Gibbs sampler implementation in the package vignette or for example Geweke (2005), pp.171-172.
 (Thanks to Miguel Godinho de Matos from Carnegie Mellon University for pointing me to this.)
 Therefore, we now provide an interface for the direct use of the precision matrix \code{H}
-in \code{rtmvnorm()}. 
+in \code{rtmvnorm()}.
+
+\bold{Gibbs sampler with sparse precision matrix H}\cr
+The size of the covariance matrix \code{sigma} or precision matrix \code{H} 
+- if expressed as a dense \code{\link[base]{matrix}} - grows quadratic with the number of dimensions d.
+For high-dimensional problems (such as d > 5000), 
+it is no longer efficient and appropriate to work with dense matrix representations, 
+as one quickly runs into memory problems.\cr 
+It is interesting to note that in many applications the precision matrix, 
+which holds the conditional dependencies, will be sparse, whereas the covariance matrix 
+will be dense. 
+Hence, expressing H as a sparse matrix will significantly reduce the amount of memory to store this matrix 
+and allows much larger problems to be handled. 
+In the current version of the package, the precision matrix (not \code{sigma} since it will be dense in most cases)
+can be passed to \code{rtmvnorm.sparseMatrix()} as a \code{\link[Matrix]{sparseMatrix}} from the \code{Matrix} package.
+See the examples section below for a usage example.
 }
 
 \section{Warning}{
@@ -277,6 +298,26 @@ D <- matrix(c(1, 1, 1, -1), 2, 2)
 X <- rtmvnorm(n=1000, mean=mean, H=H, lower=lower, upper=upper, D=D, algorithm="gibbs")
 plot(X, main="Gibbs sampling with precision matrix and linear constraints")
 
+################################################################################
+#
+# Example 7: Using sparse precision matrix H in high dimensions
+#
+################################################################################
+
+\dontrun{
+d <- 1000
+I_d <- sparseMatrix(i=1:d, j=1:d, x=1)
+W <- sparseMatrix(i=c(1:d, 1:(d-1)), j=c(1:d, (2:d)), x=0.5)
+H <- t(I_d - 0.5 * W) %*% (I_d - 0.5 * W)
+lower <- rep(0, d)
+upper <- rep(2, d)
+
+# Gibbs sampler generates n=100 draws in d=1000 dimensions
+X <- rtmvnorm.sparseMatrix(n=100, mean = rep(0,d), H=H, lower=lower, upper=upper,
+  burn.in.samples=100)
+colMeans(X)  
+cov(X)
+}
 }
 \keyword{distribution}
 \keyword{multivariate}

@@ -4,6 +4,13 @@ Upcoming
 # Bayesian estimation according to Griffiths (2002)
 # EM algorithm
 
+Version 1.4-1 (20.12.2011)
+--------------------------
+# Allow random-number generation in with sparse precision matrix H (class sparseMatrix from Matrix package)
+# Added a Fortran subroutine for efficient Gibss sampling with sparse precision matrix H, which can now address
+  much larger problems.
+# removed check for symmetry and positive Definiteness for precision matrix H if H is a sparse matrix, since there is no such method in Matrix package.
+
 Version 1.3-1 (29.11.2011)
 --------------------------
 # Rewritten the Gibbs sampler in R/Fortran to allow for a precision matrix H instead of covariance matrix Sigma. This has 2 advantages:

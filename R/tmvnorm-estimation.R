@@ -224,10 +224,20 @@ mle.tmvnorm <- function(X,
   # under names "lower" and "upper"
   if ((length(lower.bounds) > 1L || length(upper.bounds) > 1L || lower.bounds[1L] != 
         -Inf || upper.bounds[1L] != Inf) && method == "L-BFGS-B") {
-    eval.parent(substitute(mle(negloglik, start=as.list(theta), fixed=fixed, method = method, lower=lower.bounds, upper=upper.bounds, ...)))     
+    mle.fit <- eval.parent(substitute(mle(negloglik, start=as.list(theta), fixed=fixed, method = method, lower=lower.bounds, upper=upper.bounds, ...)))
+    
+    #mle.call <- substitute(mle(negloglik, start=as.list(theta), fixed=fixed, method = method, lower=lower.bounds, upper=upper.bounds, ...)) 
+    #mle.fit <- mle(negloglik, start=as.list(theta), fixed=fixed, method = method, lower=lower.bounds, upper=upper.bounds, ...)
+    #mle.fit@call <- mle.call
+    return (mle.fit)
   } else {
-    # we need evaluated arguments in the call
-    eval.parent(substitute(mle(negloglik, start=as.list(theta), fixed=fixed, method = method, ...)))
+    # we need evaluated arguments in the call for profile(mle.fit)
+    mle.fit <- eval.parent(substitute(mle(negloglik, start=as.list(theta), fixed=fixed, method = method, ...))) 
+    
+    #mle.call <- substitute(mle(negloglik, start=as.list(theta), fixed=fixed, method = method, ...)) 
+    #mle.fit <- mle(negloglik, start=as.list(theta), fixed=fixed, method = method, ...)
+    #mle.fit@call <- mle.call
+    return (mle.fit)
   }
 }
 

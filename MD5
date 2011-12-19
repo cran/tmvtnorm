@@ -1,6 +1,6 @@
-653fb3736f0d058d383a815ec7ee9cab *DESCRIPTION
-fccde7ddfb2dc40709f93e0db859935e *NAMESPACE
-4ea56282a8650a4500757e0179c97800 *NEWS
+58029aa5d165013debd3cf239e4877d7 *DESCRIPTION
+9153c79d4306f0ad2abe69c76116bfd7 *NAMESPACE
+43720bb00602a23a57129277afe912ac *NEWS
 9fc6492d865bdb440b4e3f448b8e0355 *R/bivariate-marginal-density.R
 2254488360139f67dacf07d244013dd7 *R/checkTmvArgs.R
 d6f4d24cfe14a3e8964e20090466ec85 *R/dtmvnorm-marginal.R
@@ -13,10 +13,10 @@ a96cbc560f21e70baf7c20844adafd6c *R/ptmvnorm-marginal.R
 3e75d9a8d7fb267900d6d0a954f22b96 *R/ptmvt-marginal.R
 09d837b4d67158a40df214bd77d14feb *R/ptmvt.R
 6db4e4dd6eed11a0bfdfb2931f90ad6c *R/qtmvnorm-marginal.R
-ab169f193700f82a129cccaeb9f1dd80 *R/rtmvnorm.R
+f403650ad17c5a837ba590dd0a4588fe *R/rtmvnorm.R
 d1a1b5e716204e212126ec989064297c *R/rtmvt.R
 a49359a68b29c73b8ffb8d8ee1f06fcb *R/tmvnorm-estimation-GMM.R
-33d141e466babff344d805a9774929f5 *R/tmvnorm-estimation.R
+77f5cbab362cfbfa34a5095eec2656a5 *R/tmvnorm-estimation.R
 05f0324f7a52081a7faca3fe125d2879 *demo/00Index
 43befa36b93301eb64f743780e3ceac8 *demo/demo1.R
 8cb92af9f083a0e444c58f5c82d79ace *demo/demo2.R
@@ -32,10 +32,11 @@ dfc3bdd33c16592a486095445ce29f36 *man/ptmvnorm.Rd
 ce7576e22a019b6b09a31fc1fdc69ce7 *man/ptmvnorm.marginal.Rd
 5981bf4f2825bf63510726d53b1d9e79 *man/ptmvt.Rd
 342f510aae0e72a5d7600b4e3ca1db11 *man/qtmvnorm-marginal.Rd
-25501af94dfde3675ddc767c8cc47136 *man/rtmvnorm.Rd
+2a034c184f01b4397f13662eb6a673c0 *man/rtmvnorm.Rd
 00afd8b7bebba108462cc3c281d03cd0 *man/rtmvt.Rd
 56ff9ee8d7d9d645a83ccf47d5fe5b1e *man/tmvnorm.Rd
-df3ed5b33dbff34a50b38920ca6ddb49 *release-notes.txt
+ace4ea0f04fca5a2fdbd8db032fe2b1b *release-notes.txt
 ae25215cedbedbe2d9de559d8f4f5d66 *src/Fortran2CWrapper.c
 3996e7c16bfb96fad295ee425815cb4d *src/Makevars
-48aa4855cbce2df0be7d842c1474592d *src/rtmvnormgibbs.f90
+6d1f488e2bfc0ec8a781cc13d43ca93f *src/linked_list.f90
+c9249347dd7eff69beecf3e320b4c8c5 *src/rtmvnormgibbs.f90
