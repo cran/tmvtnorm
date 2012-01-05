@@ -442,11 +442,13 @@ do j = 1,(burnin + n * thinning)
   end do
 end do
 
- ! deallocate linked list at the end of the program
+ ! deallocate linked list at the end of the program and free memory
  do i=1,d
+   call free_all(map(i))
    nullify(map(i)%first)                    ! "zero out" our list
    nullify(map(i)%last)
  enddo
+ nullify(current)
 
 ! reset R random number generator
 call rndend()

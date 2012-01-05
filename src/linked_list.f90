@@ -41,4 +41,20 @@ module linked_list
     !print *,"added element to linked list i=",newelem%i," j=",newelem%j," v=",newelem%v
    endif
   end subroutine
+
+  ! remove all elements of the linked list and free memory
+  subroutine free_all(row)
+    implicit none
+    type(matrixrow) :: row
+    type(node), pointer :: tmp
+
+    do
+     tmp => row%first
+     if (associated(tmp) .eqv. .FALSE.) exit
+     row%first => row%first%next
+     deallocate(tmp)
+    end do
+  end subroutine free_all
+
+
 end module linked_list

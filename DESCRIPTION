@@ -1,16 +1,17 @@
 Package: tmvtnorm
-Version: 1.4-1
-Date: 2011-12-19
+Version: 1.4-3
+Date: 2012-01-05
 Title: Truncated Multivariate Normal and Student t Distribution
 Author: Stefan Wilhelm <wilhelm@financial.com> with contributions from Manjunath B G <bgmanjunath@gmail.com>
 Maintainer: Stefan Wilhelm <wilhelm@financial.com>
 Imports: stats
 Depends: R (>= 1.9.0), mvtnorm, utils, Matrix, stats4, gmm
+Suggests: lattice
 Description: Random number generation for the truncated multivariate normal and Student t distribution. 
   Computes probabilities, quantiles and densities, 
   including one-dimensional and bivariate marginal densities. Computes first and second moments (i.e. mean and covariance matrix) for the double-truncated multinormal case.
 License: GPL (>= 2)
 URL: http://www.r-project.org
-Packaged: 2011-12-26 22:28:54 UTC; stefan
+Packaged: 2012-01-05 09:43:58 UTC; stefan
 Repository: CRAN
-Date/Publication: 2011-12-27 10:06:24
+Date/Publication: 2012-01-05 10:28:33

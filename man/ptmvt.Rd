@@ -30,9 +30,6 @@ ptmvt(lowerx, upperx, mean = rep(0, length(lowerx)), sigma, df = 1,
   \item{abseps}{ absolute error tolerance as double. }
   \item{releps}{ relative error tolerance as double. }
 }
-\details{
-%%  ~~ If necessary, more details than the description above ~~
-}
 \value{
 The evaluated distribution function is returned with attributes
   \item{error}{estimated absolute error and}
