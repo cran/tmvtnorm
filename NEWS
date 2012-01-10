@@ -1,5 +1,12 @@
 User visible changes in tmvtnorm package
 
+changes in tmvtnorm  1.4-4 (2012-01-10)
+
+# dramatic performance gain in rtmvnorm.sparseMatrix() through optimization
+# Bugfix in rtmvnorm() with linear constraints D: (reported by Claudia Köllmann [koellmann@statistik.tu-dortmund.de])
+  - forwarding "algorithm=" argument from rtmvnorm() to internal methods dealing with linear constraints was corrupt.
+  - sampling with linear constraints D lead to wrong results due to missing t() 
+
 changes in tmvtnorm  1.4-2 (2012-01-04)
 
 # Bugfix in rtmvnorm.sparseMatrix(): fixed a memory leak in Fortran code

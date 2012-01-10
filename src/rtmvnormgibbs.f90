@@ -233,14 +233,10 @@ do j = 1,(burnin + n * thinning)
     Fb         = pnormr(upper(i), mu_i, sd(i), 1, 0)
     u          = unifrnd()
     !call RANDOM_NUMBER(u)
-    !call dblepr("u=", 2, u, 1)
     prob       = u * (Fb - Fa) + Fa
-    !call dblepr("prob=", 5, prob, 1)
     q          = qnormr(prob, 0.0d0, 1.0d0, 1, 0)
-    !call dblepr("q=", 2, q, 1)
     xr(i)      = mu_i + sd(i) * q
-    !call dblepr("x(i)=", 5, xr(i), 1)
-
+    
     ! Nur für j > burnin samples aufzeichnen, Default ist thinning = 1
     ! bei Thinning nur jedes x-te Element nehmen
     if (j > burnin .AND. mod(j - burnin,thinning) == 0) then
@@ -270,14 +266,12 @@ subroutine populate_map(map, Hi, Hj, Hv, num_nonzero, d, upper_triangular)
  logical :: upper_triangular
 
  !allocate(map(d)) ! and allocate our map
- !print*,"Nulling map..."
  do i=1,d
    nullify(map(i)%first)                    ! "zero out" our list
    nullify(map(i)%last)
  enddo
 
  ! populate map for with all entries in Hi, Hj and Hv
- !print*,"Populating map with ",num_nonzero,"elements..."
  do k=1,num_nonzero
    i = Hi(k)
 
@@ -343,7 +337,6 @@ double precision :: unifrnd, qnormr, pnormr, u, q, prob, Fa, Fb, mu_i, s2
 double precision, dimension(d)    :: H_inv_ii
 
 double precision, dimension(n*d), INTENT(INOUT) :: X
-double precision, dimension(d-1)     :: s3
 double precision, dimension(d)       :: x0, xr, mean, lower, upper, sd
 
 ! in this map we store for every row i the non-zero entries (triplets) as a linked list of matrix elements
@@ -358,7 +351,7 @@ call rndstart()
 ! initialise Fortran random number generator
 !CALL RANDOM_SEED
 
-! SW: I do not know why, but we have to reset ind each time!!!
+! We have to reset ind each time
 ! If we forget this line, ind will be incremented further and then Fortran crashes!
 ind  = 0
 
@@ -390,54 +383,42 @@ do j = 1,(burnin + n * thinning)
 
   ! For all dimensions
   do i = 1,d
-    ! subindex "-i"
-    minus_i  = (/ (k, k=1,i-1), (k, k=i+1,d) /)
-
-    ! conditional mean mu[i] = E[i | -i] = mean[i] - H_ii^{-1} H[i,-i] (x[-i] - mean[-i])
-    s3(1:(d-1)) = xr(minus_i) - mean(minus_i)
+    ! s2 will represent the term H[i,-i] (x[-i] - mean[-i])
     s2 = 0
 
 	! We avoid some n x d x d accesses to hash matrix H even for those elements that are zero...
     ! For n=30 and d=5000 this results in 30 x 5000 x 5000 = 75 million accesses to matrix H...
-    ! instead of iterating all d-1 elements H[i,-i] we only iterate all NON-ZERO elements H[i,-i] which will dramatically reduce the number
-    ! of hashtable accesses. Otherwise when d grows to d=5000 we would have something like d * d = 2.5 million accesses to matrix elements H[i,-i] although most are zero!
+    ! Instead of iterating all (d-1) elements H[i,-i] we only iterate all m (m < d) NON-ZERO elements H[i,-i] which will dramatically reduce the number
+    ! of hashtable accesses. This will scale as n x d x m and will be linear in d for a fixed m.
     current => map(i)%first
     do while (associated(current))
      elem = current%data
-     !print *,"elem in linked list i=",elem%i," j=",elem%j," v=",elem%v
-     ! sum all H[i,-i] elements. Since indizes in s3 are (1...(i-i)(i+1)...d) we have to adjust index k accordingly
+     ! sum only non-zero H[i,-i] elements in H[i,-i] (x[-i] - mean[-i])
      ! no summing for i = j elements!
-     if (elem%j < elem%i) then
+      if (elem%j .ne. elem%i) then
        k = elem%j
-       s2 = s2 + elem%v * s3(k)
-     else if (elem%j > elem%i) then
-       k = elem%j - 1
-       s2 = s2 + elem%v * s3(k)
+       s2 = s2 + elem%v * (xr(k) - mean(k)) !TODO check
      end if
      current => current%next
     end do
 
+    ! conditional mean mu[i] = E[i | -i] = mean[i] - H_ii^{-1} H[i,-i] (x[-i] - mean[-i])
+    ! we only loop through all non-zero elements in H[i,-i] = all indices j .ne. i in sparse matrix representation H[i,j]=v
     mu_i       = mean(i) - H_inv_ii(i) * s2
 
     Fa         = pnormr(lower(i), mu_i, sd(i), 1, 0)
     Fb         = pnormr(upper(i), mu_i, sd(i), 1, 0)
     u          = unifrnd()
     !call RANDOM_NUMBER(u)
-    !call dblepr("u=", 2, u, 1)
     prob       = u * (Fb - Fa) + Fa
-    !call dblepr("prob=", 5, prob, 1)
     q          = qnormr(prob, 0.0d0, 1.0d0, 1, 0)
-    !call dblepr("q=", 2, q, 1)
     xr(i)      = mu_i + sd(i) * q
-    !call dblepr("x(i)=", 5, xr(i), 1)
-
+    
     ! Nur für j > burnin samples aufzeichnen, Default ist thinning = 1
     ! bei Thinning nur jedes x-te Element nehmen
     if (j > burnin .AND. mod(j - burnin,thinning) == 0) then
       ind        = ind + 1
       X(ind)     = xr(i)
-      !call intpr("ind=", 4, ind, 1)
-      !call dblepr("X(ind)=", 7, X(ind), 1)
     end if
   end do
 end do

@@ -95,7 +95,7 @@ rtmvnorm <- function(n,
   
   if (!identical(D,diag(length(mean)))) {
     # D <> I : general linear constraints
-    retval <- rtmvnorm.linear.constraints(n=n, mean=mean, sigma=sigma, H=H, lower=lower, upper=upper, D=D, ...)
+    retval <- rtmvnorm.linear.constraints(n=n, mean=mean, sigma=sigma, H=H, lower=lower, upper=upper, D=D, algorithm=algorithm, ...)
     return(retval)
   } else {
     # D == I : rectangular case
@@ -581,7 +581,8 @@ rtmvnorm.linear.constraints <-
   H = NULL, 
   lower = rep(-Inf, length = length(mean)), 
   upper = rep( Inf, length = length(mean)),
-  D  = diag(length(mean)), ...)
+  D  = diag(length(mean)), 
+  algorithm,...)
 {
   # dimension of X
   d <- length(mean)
@@ -613,15 +614,15 @@ rtmvnorm.linear.constraints <-
   
   if (!is.null(H)) {
     Tinv <- t(Dinv) %*% H %*% Dinv
-    Z <- rtmvnorm(n, mean=rep(0, d), sigma=diag(d), H=Tinv, lower=alpha, upper=beta, ...)
+    Z <- rtmvnorm(n, mean=rep(0, d), sigma=diag(d), H=Tinv, lower=alpha, upper=beta, algorithm=algorithm, ...)
   } else {
     T     <- D %*% sigma %*% t(D)
-	  Z <- rtmvnorm(n, mean=rep(0, d), sigma=T, H=NULL, lower=alpha, upper=beta, ...)
+	  Z <- rtmvnorm(n, mean=rep(0, d), sigma=T, H=NULL, lower=alpha, upper=beta, algorithm=algorithm, ...)
   }
 
   # For each z do the transformation
   # x = mu + D^(-1) z
-  X <- sweep(Z %*% Dinv, 2, FUN="+", mean)
+  X <- sweep(Z %*% t(Dinv), 2, FUN="+", mean)
   return(X)
 }
 
