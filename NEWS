@@ -1,5 +1,14 @@
 User visible changes in tmvtnorm package
 
+changes in tmvtnorm  1.4-6 (2012-03-23)
+
+# further optimization in mtmvnorm() and implementation of Johnson/Kotz-Formula when only a subset of variables is truncated
+
+changes in tmvtnorm  1.4-5 (2012-02-13)
+
+# rtmvnorm() can be used with both sparse triplet representation and (compressed sparse column) for H
+# dramatic performance gain in mtmvnorm() through optimization
+
 changes in tmvtnorm  1.4-4 (2012-01-10)
 
 # dramatic performance gain in rtmvnorm.sparseMatrix() through optimization

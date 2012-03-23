@@ -15,16 +15,16 @@
 !
 ! To cite package tmvtnorm in publications use:
 !
-!  Stefan Wilhelm, Manjunath B G (2010). tmvtnorm: Truncated
-!  Multivariate Normal Distribution. R package version 1.1-5.
+!  Stefan Wilhelm, Manjunath B G (2012). tmvtnorm: Truncated
+!  Multivariate Normal Distribution. R package version 1.4-5.
 !
 ! A BibTeX entry for LaTeX users is
 !
 !  @Manual{,
 !    title = {{tmvtnorm}: Truncated Multivariate Normal Distribution},
 !    author = {Stefan Wilhelm and Manjunath B G},
-!    year = {2010},
-!    note = {R package version 1.1-5},
+!    year = {2012},
+!    note = {R package version 1.4-5},
 !    url = {http://CRAN.R-project.org/package=tmvtnorm},
 !  }
 ! 
@@ -305,7 +305,8 @@ enddo
 end subroutine
 
 
-! Gibbs sampling of the truncated multivariate normal distribution using a sparse matrix representation of the precision matrix H
+! Gibbs sampling of the truncated multivariate normal distribution using a sparse matrix representation of the precision matrix H,
+! represented in triplet form
 !
 ! @param n number of random sample to generate by Gibbs sampling
 ! @param d dimension (d >= 2)
@@ -318,7 +319,7 @@ end subroutine
 ! @param burnin Number of Burn-in samples to be discarded
 ! @param thinning thinning factor for thinning the Markov chain
 ! @return return value X --> vektor (n * d) --> can be coerced into a (n x d) matrix
-subroutine rtmvnormgibbssparseprec(n, d, mean, Hi, Hj, Hv, num_nonzero, lower, upper, x0, burnin, thinning, X)
+subroutine rtmvnorm_sparse_triplet(n, d, mean, Hi, Hj, Hv, num_nonzero, lower, upper, x0, burnin, thinning, X)
 
 use linked_list
 
@@ -329,9 +330,6 @@ integer :: n, d, i, j, k, ind = 0, burnin, thinning, num_nonzero
 ! matrix representation of concentration matrix H
 integer, dimension(num_nonzero) :: Hi, Hj
 double precision, dimension(num_nonzero)       :: Hv
-
-! subindex "-i"
-integer, dimension(d-1) :: minus_i
 
 double precision :: unifrnd, qnormr, pnormr, u, q, prob, Fa, Fb, mu_i, s2
 double precision, dimension(d)    :: H_inv_ii
@@ -433,5 +431,123 @@ end do
 
 ! reset R random number generator
 call rndend()
-end subroutine rtmvnormgibbssparseprec
+end subroutine rtmvnorm_sparse_triplet
+
+! Gibbs sampling of the truncated multivariate normal distribution using a sparse matrix representation of the precision matrix H (d x d).
+!
+! Instead of using a triplet representation H(i,j)=v, we use the compressed sparse column (csc) format with 3 vectors
+! Hi : integer vector of row index, length num_nonzero; starting from zero
+! Hp : integer vector of pointers, length d + 1; starting from zero; non-decreasing vector
+! Hv : double vector of values, length num_nonzero
+!
+! This format is good at accessing all non-zero elements in one column j
+! (and -as in our case- for symmetric matrices also to acess all elements in one row i)
+!
+! To access an element H(i,j), the following steps are necessary
+! j
+! v = Hv(Hp(j):Hp(j+1))
+! i = Hi(Hp(j):Hp(j+1))
+!
+! @param n number of random sample to generate by Gibbs sampling
+! @param d dimension (d >= 2)
+! @param mean mean vector of dimension d (d x 1)
+! @param Hi,Hp,Hv are the nonzero elements of the precision matrix H (d, d): H(i, j)=v, each a vector having the same length num_nonzero
+! @param num_nonzero number of nonzero elements of the precision matrix H
+! @param lower lower truncation points (d x 1)
+! @param upper upper truncation points (d x 1)
+! @param x0 Startvektor (d x 1)
+! @param burnin Number of Burn-in samples to be discarded
+! @param thinning thinning factor for thinning the Markov chain
+! @return return value X --> vektor (n * d) --> can be coerced into a (n x d) matrix
+subroutine rtmvnorm_sparse_csc(n, d, mean, Hi, Hp, Hv, num_nonzero, lower, upper, x0, burnin, thinning, X)
+
+IMPLICIT NONE
+
+integer :: n, d, i, j, k, r, ind = 0, burnin, thinning, num_nonzero
+
+! compressed sparse column (csc) matrix representation of concentration matrix H
+integer, dimension(num_nonzero)   :: Hi
+integer, dimension(d+1) :: Hp
+double precision, dimension(num_nonzero)       :: Hv
+
+double precision :: unifrnd, qnormr, pnormr, u, q, prob, Fa, Fb, mu_i, s2
+double precision, dimension(d)    :: H_inv_ii
+
+double precision, dimension(n*d), INTENT(INOUT) :: X
+double precision, dimension(d)       :: x0, xr, mean, lower, upper, sd
+
+! initialise R random number generator
+call rndstart()
+
+! initialise Fortran random number generator
+!CALL RANDOM_SEED
+
+! SW: I do not know why, but we have to reset ind each time!!!
+! If we forget this line, ind will be incremented further and then Fortran crashes!
+ind  = 0
+
+! loop through all elements and look for diagonal elements H[i,i], calculate conditional standard deviations sd(i | -i)
+! List of conditional variances sd(i) can be precalculated
+! Vector of conditional standard deviations sd(i | -i) = H_ii^{-1} = 1 / H[i, i] = sqrt(1 / diag(H))
+! does not depend on x[-i] and can be precalculated before running the chain.
+do j=1,d
+  do k=Hp(j),Hp(j+1)-1             ! k from 0..(d-1)
+   i = Hi(k+1) + 1                 ! Hi is index from 0..(d-1) --> need index i=1..d
+
+   if (i == j) then
+    H_inv_ii(i) = (1.0d0 / Hv(k+1))  ! H^{-1}(i,i) = 1 / H(i,i)
+    sd(i) = sqrt(H_inv_ii(i))        ! sd(i) is sqrt(H^{-1}(i,i))
+   end if
+  end do
+end do
+
+! start value
+xr = x0
+
+! Actual number of samples to create:
+! #burn-in-samples + n * #thinning-factor
+
+!For all samples n times the thinning factor
+do j = 1,(burnin + n * thinning)
+
+  ! For all dimensions
+  do i = 1,d
+
+    ! conditional mean mu[i] = E[i | -i] = mean[i] - H_ii^{-1} H[i,-i] (x[-i] - mean[-i])
+    s2 = 0
+
+    ! For H[i,-i] (x[-i] - mean[-i]) we need to sum only all non-zero H[i,-i] elements!
+    ! since H is symmetric, we can use the column sparse compressed (csc) format and sum all H[-i,i] elements instead
+    do k=Hp(i),Hp(i+1)-1                    ! loop all non-zero elements in column i, k is index 0..(d-1)
+      r = Hi(k+1) + 1                       ! row index r in column i is r=1..d
+      if (i .ne. r) then
+        s2 = s2 + Hv(k+1) * (xr(r) - mean(r))
+      end if
+    end do
+
+    mu_i       = mean(i) - H_inv_ii(i) * s2
+
+    Fa         = pnormr(lower(i), mu_i, sd(i), 1, 0)
+    Fb         = pnormr(upper(i), mu_i, sd(i), 1, 0)
+    u          = unifrnd()
+    !call RANDOM_NUMBER(u)
+    prob       = u * (Fb - Fa) + Fa
+    q          = qnormr(prob, 0.0d0, 1.0d0, 1, 0)
+    xr(i)      = mu_i + sd(i) * q
+
+    ! Only retain samples for j > burnin. Default is thinning = 1.
+    ! If thinning>1 do retain only every x-th element
+    if (j > burnin .AND. mod(j - burnin,thinning) == 0) then
+      ind        = ind + 1
+      X(ind)     = xr(i)
+!      call intpr("ind=", 4, ind, 1)
+!      call dblepr("X(ind)=", 7, X(ind), 1)
+    end if
+  end do
+end do
+
+! reset R random number generator
+call rndend()
+end subroutine rtmvnorm_sparse_csc
+
 

@@ -22,7 +22,8 @@
 #
 ################################################################################
 
-# Erzeugt eine Matrix X (n x k) mit Zufallsrealisationen aus einer Trunkierten Multivariaten Normalverteilung mit k Dimensionen
+# Erzeugt eine Matrix X (n x k) mit Zufallsrealisationen 
+# aus einer Trunkierten Multivariaten Normalverteilung mit k Dimensionen
 # über Gibbs Sampler aus einer Multivariaten Normalverteilung
 #
 # @param n Anzahl der Realisationen
@@ -514,19 +515,36 @@ rtmvnorm.gibbs.Fortran <- function(n,
 							  thinning = as.integer(thinning),
                               X     = as.double(X), 
                               NAOK=TRUE, PACKAGE="tmvtnorm")
-    } else { # H is given in sparse matrix representation
-      # TODO: Aufpassen, wenn irgendwann mal die Fortran sparsem-Library rausfliegt
-      # Es muss klar sein, dass nur die untere Dreiecksmatrix übergeben wird...
-      sH <- summary(H)
-      sH <- subset(sH, sH$i <= sH$j)  # get (i,j,v=x) triplet, but due to symmetry of H only lower triangular matrix
-      ret <- .Fortran("rtmvnormgibbssparseprec",
+    } else if (inherits(H, "dgCMatrix")) {  # H is given in compressed sparse column (csc) representation
+      ret <- .Fortran("rtmvnorm_sparse_csc",
                               n     = as.integer(n),
                               d     = as.integer(d),
                               mean  = as.double(mean),
-                              Hi    = as.integer(sH$i),
-                              Hj    = as.integer(sH$j),
-                              Hv    = as.double(sH$x),
-                              num_nonzero = as.integer(nrow(sH)),
+                              Hi    = as.integer(H@i),
+                              Hp    = as.integer(H@p),
+                              Hv    = as.double(H@x),
+                              num_nonzero = as.integer(length(H@x)),
+                              lower = as.double(lower), 
+                              upper = as.double(upper),
+                              x0    = as.double(x0),
+							                burnin   = as.integer(burn.in.samples),
+							                thinning = as.integer(thinning),
+                              X     = as.double(X), 
+                              NAOK=TRUE, PACKAGE="tmvtnorm")
+    }
+    else { # H is given in sparse matrix triplet representation
+      # Es muss klar sein, dass nur die obere Dreiecksmatrix (i <= j) übergeben wird...
+      sH <- as(H, "dgTMatrix")        # precision matrix as triplet representation 
+      # ATTENTION: sH@i and sH@j are zero-based (0..(n-1)), we need it as 1...n
+      ind <- sH@i <= sH@j             # upper triangular matrix elements of H[i,j] with i <= j
+      ret <- .Fortran("rtmvnorm_sparse_triplet",
+                              n     = as.integer(n),
+                              d     = as.integer(d),
+                              mean  = as.double(mean),
+                              Hi    = as.integer(sH@i[ind]+1),
+                              Hj    = as.integer(sH@j[ind]+1),
+                              Hv    = as.double(sH@x[ind]),
+                              num_nonzero = as.integer(sum(ind)),
                               lower = as.double(lower), 
                               upper = as.double(upper),
                               x0    = as.double(x0),

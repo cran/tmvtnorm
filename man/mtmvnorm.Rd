@@ -24,14 +24,25 @@ mtmvnorm(mean, sigma, lower, upper, doComputeVariance=TRUE)
                            Defaults to \code{TRUE} for backward compatibility.}            
 }
 
-\value{
-  \item{mean}{Mean vector of truncated variables}
-  \item{cov}{Covariance matrix of truncated variables}
+\details{
+Details for the moment calculation under double truncation and the derivation of the formula
+can be found in the Manjunath/Wilhelm (2009) working paper.
+If only a subset of variables are truncated, we calculate the truncated moments only for these
+and use the Johnson/Kotz formula for the remaining untruncated variables.
 }
+
+\value{
+  \item{tmean}{Mean vector of truncated variables}
+  \item{tvar}{Covariance matrix of truncated variables}
+}
+
 \references{
 
 Tallis, G. M. (1961). The moment generating function of the truncated multinormal distribution. 
 \emph{Journal of the Royal Statistical Society, Series B}, \bold{23}, 223--229
+
+Johnson, N./Kotz, S. (1970). Distributions in Statistics: Continuous Multivariate Distributions
+\emph{Wiley & Sons}, pp. 70--73
 
 Lee, L.-F. (1979). On the first and second moments of the truncated multi-normal distribution and a simple estimator. 
 \emph{Economics Letters}, \bold{3}, 165--169
