@@ -18,7 +18,7 @@ dtmvnorm.marginal2(xq, xr, q, r,
  sigma = diag(length(mean)), 
  lower = rep(-Inf, length = length(mean)), 
  upper = rep(Inf, length = length(mean)),
- log = FALSE)
+ log = FALSE, pmvnorm.algorithm=GenzBretz())
 }
 
 \arguments{
@@ -33,6 +33,7 @@ dtmvnorm.marginal2(xq, xr, q, r,
   \item{upper}{Vector of upper truncation points, 
    default is \code{rep( Inf, length = length(mean))}.}
   \item{log}{Logical; if \code{TRUE}, densities d are given as log(d).} 
+  \item{pmvnorm.algorithm}{Algorithm used for \code{\link[mvtnorm]{pmvnorm}}}
 }
 
 \details{

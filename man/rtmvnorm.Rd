@@ -19,6 +19,7 @@ rtmvnorm(n, mean = rep(0, nrow(sigma)),
   H = NULL, 
   algorithm=c("rejection", "gibbs", "gibbsR"),
   ...)
+  
 rtmvnorm.sparseMatrix(n, mean = rep(0, nrow(H)), 
     H = sparseMatrix(i=1:length(mean), j=1:length(mean), x=1),
     lower = rep(-Inf, length = length(mean)), 
@@ -46,7 +47,7 @@ rtmvnorm.sparseMatrix(n, mean = rep(0, nrow(H)),
 \details{
 
 The generation of random numbers from a truncated multivariate normal distribution is done 
-using either rejection sampling or Gibbs sampler.
+using either rejection sampling or Gibbs sampling.
 
 \bold{Rejection sampling}\cr
 Rejection sampling is done from the standard multivariate normal distribution. 
@@ -267,8 +268,8 @@ sigma <- matrix(c(10, 0,
 # a1 <= x1 + x2 <= b2
 # a2 <= x1 - x2 <= b2
 #
-# [ a1 ] <= [ 1   1 ] [ x1 ]   [b1]
-# [ a2 ]    [ 1  -1 ] [ x2 ]   [b2]
+# [ a1 ] <= [ 1   1 ] [ x1 ] <= [b1]
+# [ a2 ]    [ 1  -1 ] [ x2 ]    [b2]
 a     <- c(-2, -2)
 b     <- c( 2,  2)
 D     <- matrix(c(1, 1,
@@ -282,7 +283,7 @@ for (i in 1:nrow(D)) {
   abline(a=a[i]/D[i, 2], b=-D[i,1]/D[i, 2], col="red")
   abline(a=b[i]/D[i, 2], b=-D[i,1]/D[i, 2], col="red")
 }
-
+                          
 ################################################################################
 #
 # Example 6: Using precision matrix H rather than sigma

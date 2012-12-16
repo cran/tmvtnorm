@@ -7,6 +7,10 @@ checkSymmetricPositiveDefinite <- function(x, name="sigma") {
 		stop(sprintf("%s must be a square matrix", name))
 	}
 	
+	if (any(diag(x) <= 0)) {
+	  stop(sprintf("%s all diagonal elements must be positive", name))
+  }
+	
 	if (det(x) <= 0) {
 		stop(sprintf("%s must be positive definite", name))
 	}
@@ -25,7 +29,7 @@ checkTmvArgs <- function(mean, sigma, lower, upper)
 		stop(sQuote("sigma"), " not specified or contains NA")
 	
 	if (!is.matrix(sigma)) {
-		sigma = as.matrix(sigma)
+		sigma <- as.matrix(sigma)
 	}
 	
 	if (NCOL(lower) != NCOL(upper)) {

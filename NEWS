@@ -1,5 +1,15 @@
 User visible changes in tmvtnorm package
 
+changes in tmvtnorm  1.4-7 (2012-11-29)
+
+# new method rtmvnorm2() for drawing random samples with 
+  general linear constraints a <= Dx <= b with x (d x 1), D (r x d), a,b (r x 1) 
+  which can also handle the case r > d. Requested by Xiaojin Xu [xiaojinxu.fdu@gmail.com]
+  Currently works with Gibbs sampling. 
+# bugfix in dtmvnorm(...,log=TRUE). Reported by John Merrill [john.merrill@gmail.com]
+# optimization in mtmvnorm() to speed up the calculations
+# dtmvnorm.marginal2() can now be used with vectorized xq, xr.
+
 changes in tmvtnorm  1.4-6 (2012-03-23)
 
 # further optimization in mtmvnorm() and implementation of Johnson/Kotz-Formula when only a subset of variables is truncated
@@ -38,7 +48,8 @@ changes in tmvtnorm  1.3-1 (2011-12-01)
 
 changes in tmvtnorm 1.2-3 (2011-06-04)
 
-# rtmvnorm() works now with general linear constraints a<= Dx<=b, implemented with both rejection sampling and Gibbs sampling (Geweke (1991))
+# rtmvnorm() works now with general linear constraints a<= Dx<=b, with x (d x 1), full-rank matrix D (d x d), a,b (d x 1). 
+  Implemented with both rejection sampling and Gibbs sampling (Geweke (1991))
 # Added GMM estimation in gmm.tmvnorm()
 # Bugfix in dtmvt() thanks to Jason Kramer: Using type="shifted" in pmvt()
   (reported by Jason Kramer [jskramer@uci.edu])

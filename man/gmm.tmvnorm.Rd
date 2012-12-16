@@ -83,6 +83,7 @@ Working Paper. Available at SSRN: \url{http://ssrn.com/abstract=1472153}
 }
 
 \examples{
+\dontrun{
 set.seed(1.234)
 
 # the actual parameters
@@ -120,4 +121,5 @@ confint(gmm.fit3)
 # MLE estimation for comparison
 mle.fit1 <- mle.tmvnorm(X, lower=lower, upper=upper)
 confint(mle.fit1)
+}
 }

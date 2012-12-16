@@ -11,7 +11,7 @@
 # 
 # Author: Stefan Wilhelm
 #
-# Literatur:
+# References:
 # (1) Jayesh H. Kotecha and Petar M. Djuric (1999) : 
 # "GIBBS SAMPLING APPROACH FOR GENERATION OF TRUNCATED MULTIVARIATE GAUSSIAN RANDOM VARIABLES"
 # (2) Geweke (1991): 
@@ -22,15 +22,20 @@
 #
 ################################################################################
 
-# Erzeugt eine Matrix X (n x k) mit Zufallsrealisationen 
-# aus einer Trunkierten Multivariaten Normalverteilung mit k Dimensionen
-# über Gibbs Sampler aus einer Multivariaten Normalverteilung
+# We need this separate method rtmvnorm.sparseMatrix() because
+# rtmvnorm() initialises dense d x d sigma and D matrix which will not work for high dimensions d.
+# It also does some sanity checks on sigma and D (determinant etc.) which will not
+# work for high dimensions.
+ 
+# returns a matrix X (n x d) with random draws 
+# from a truncated multivariate normal distribution with d dimensionens
+# using Gibbs sampling
 #
 # @param n Anzahl der Realisationen
-# @param mean Mittelwertvektor (k x 1) der Normalverteilung
-# @param lower unterer Trunkierungsvektor (k x 1) mit lower <= x <= upper
-# @param upper oberer Trunkierungsvektor (k x 1) mit lower <= x <= upper
-# @param H Precision matrix (k x k) if given, defaults to identity matrix
+# @param mean mean vector (d x 1) der Normalverteilung
+# @param lower lower truncation vector (d x 1) with lower <= x <= upper
+# @param upper upper truncation vector (d x 1) with lower <= x <= upper
+# @param H precision matrix (d x d) if given, defaults to identity matrix
 rtmvnorm.sparseMatrix <- function(n, 
     mean = rep(0, nrow(H)), 
     H = sparseMatrix(i=1:length(mean), j=1:length(mean), x=1),
@@ -44,16 +49,21 @@ rtmvnorm.sparseMatrix <- function(n,
   rtmvnorm.gibbs.Fortran(n, mean, sigma=NULL, H, lower, upper, ...)
 }
 
-# Erzeugt eine Matrix X (n x k) mit Zufallsrealisationen aus einer Trunkierten Multivariaten Normalverteilung mit k Dimensionen
-# über Rejection Sampling oder Gibbs Sampler aus einer Multivariaten Normalverteilung
+# Erzeugt eine Matrix X (n x d) mit Zufallsrealisationen 
+# aus einer Trunkierten Multivariaten Normalverteilung mit d Dimensionen
+# über Rejection Sampling oder Gibbs Sampler aus einer Multivariaten Normalverteilung.
+# If matrix D is given, it must be a (d x d) full rank matrix.
+# Therefore this method can only cover the case with only r <= d linear restrictions.
+# For r > d linear restrictions, please see rtmvnorm2(n, mean, sigma, D, lower, upper),
+# where D can be defined as (r x d).
 #
 # @param n Anzahl der Realisationen
-# @param mean Mittelwertvektor (k x 1) der Normalverteilung
-# @param sigma Kovarianzmatrix (k x k) der Normalverteilung
-# @param lower unterer Trunkierungsvektor (k x 1) mit lower <= Dx <= upper
-# @param upper oberer Trunkierungsvektor (k x 1) mit lower <= Dx <= upper
-# @param D Matrix for linear constraints, defaults to diagonal matrix
-# @param H Precision matrix (k x k) if given
+# @param mean Mittelwertvektor (d x 1) der Normalverteilung
+# @param sigma Kovarianzmatrix (d x d) der Normalverteilung
+# @param lower unterer Trunkierungsvektor (d x 1) mit lower <= Dx <= upper
+# @param upper oberer Trunkierungsvektor (d x 1) mit lower <= Dx <= upper
+# @param D Matrix for linear constraints, defaults to (d x d) diagonal matrix
+# @param H Precision matrix (d x d) if given
 # @param algorithm c("rejection", "gibbs", "gibbsR")
 rtmvnorm <- function(n, 
     mean = rep(0, nrow(sigma)), 
@@ -65,6 +75,10 @@ rtmvnorm <- function(n,
     algorithm=c("rejection", "gibbs", "gibbsR"), ...)
 {
   algorithm <- match.arg(algorithm)
+  
+  if (is.null(mean) && (is.null(sigma) || is.null(H))) {
+    stop("Invalid arguments for ",sQuote("mean")," and ",sQuote("sigma"),"/",sQuote("H"),". Need at least mean vector and covariance or precision matrix.")
+  }
   
   # check of standard tmvtnorm arguments
   cargs <- checkTmvArgs(mean, sigma, lower, upper)
@@ -127,7 +141,7 @@ rtmvnorm <- function(n,
 # Erzeugt eine Matrix X (n x k) mit Zufallsrealisationen 
 # aus einer Trunkierten Multivariaten Normalverteilung mit k Dimensionen
 # über Rejection Sampling aus einer Multivariaten Normalverteilung mit der Bedingung
-# lower <= x <= upper
+# lower <= Dx <= upper
 # 
 # Wenn D keine Diagonalmatrix ist, dann ist gelten lineare Restriktionen für
 # lower <= Dx <= upper (siehe Geweke (1991))
@@ -160,9 +174,18 @@ rtmvnorm.rejection <- function(n,
   numAcceptedSamplesTotal <- 0
   
   # Akzeptanzrate alpha aus der Multivariaten Normalverteilung bestimmen
-  alpha <- pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma)
-  
-  if (alpha <= 0.01) warning("Acceptance rate is very low and rejection sampling becomes inefficient. Consider using Gibbs sampling.")
+  r <- length(lower)
+  d <- length(mean)
+  if (r == d & identical(D, diag(d))) {
+    alpha <- pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma)
+    if (alpha <= 0.01) warning(sprintf("Acceptance rate is very low (%s) and rejection sampling becomes inefficient. Consider using Gibbs sampling.", alpha))
+    estimatedAlpha <- TRUE
+  } else {
+    # TODO: Wie bestimme ich aus lower <= Dx <= upper für r > d Restriktionen die Akzeptanzrate alpha?
+    # Defere calculation of alpha. Assume for now that all samples will be accepted.
+    alpha <- 1
+    estimatedAlpha <- FALSE
+  }
   
   # Ziehe wiederholt aus der Multivariaten NV und schaue, wieviel Samples nach Trunkierung übrig bleiben
   while(numSamples > 0)
@@ -186,6 +209,11 @@ rtmvnorm.rejection <- function(n,
         
     # Wenn nix akzeptiert wurde, dann weitermachen
     if (length(numAcceptedSamples) == 0 || numAcceptedSamples == 0) next
+    
+    if (!estimatedAlpha) {
+      alpha <- numAcceptedSamples / nproposals
+      if (alpha <= 0.01) warning(sprintf("Acceptance rate is very low (%s) and rejection sampling becomes inefficient. Consider using Gibbs sampling.", alpha))
+    }
     
     #cat("numSamplesAccepted=",numAcceptedSamples," numSamplesToDraw = ",numSamples,"\n")
 	  numNeededSamples <- min(numAcceptedSamples, numSamples)

@@ -76,9 +76,9 @@ JohnsonKotzFormula <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(m
 mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), 
   lower = rep(-Inf, length = length(mean)), 
   upper = rep( Inf, length = length(mean)),
-  doComputeVariance=TRUE)
+  doComputeVariance=TRUE,
+  pmvnorm.algorithm=GenzBretz())
 {
-  eps <- 1e-16
   N <- length(mean)
   
   # Check input parameters
@@ -113,21 +113,17 @@ mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)),
   F_a <- numeric(N)
   F_b <- numeric(N)
   
+  zero_mean <- rep(0,N)
+  
   # pre-calculate one-dimensial marginals F_a[q] once
   for (q in 1:N) {
-  	F_a[q] <- dtmvnorm.marginal(xn=a[q], n = q, mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
- 		F_b[q] <- dtmvnorm.marginal(xn=b[q], n = q, mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
+    tmp <- dtmvnorm.marginal(xn=c(a[q],b[q]), n = q, mean=zero_mean, sigma=sigma, lower=lower, upper=upper)
+  	F_a[q] <- tmp[1]
+ 		F_b[q] <- tmp[2]
  	}
     	
   # 1. Bestimme E[X_i] = mean + Sigma %*% (F_a - F_b)
-  for (i in 1:N) {
-  	sum <- 0
-    for (q in 1:N) {
-  		sum <- sum + sigma[i, q] * (F_a[q] - F_b[q])                
-  	}
-  	TMEAN[i] <- sum
-  	# general mean case : TMEAN[i] = mean[i] + sum
-  }
+  TMEAN <- as.vector(sigma %*% (F_a - F_b))
   
   if (doComputeVariance) {
    # TODO: 
@@ -135,16 +131,16 @@ mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)),
    # in case of conditional independence.
    # calculate bivariate density only on first use and then cache it
    # so we can avoid this memory overhead.
-  				    
+   
    F2 <- matrix(0,  N, N)
    for (q in 1:N) {
      for (s in 1:N) {
        if (q != s) {
-         d1 <- dtmvnorm.marginal2(xq=a[q], xr=a[s], q=q, r=s,  mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
-         d2 <- dtmvnorm.marginal2(xq=b[q], xr=a[s], q=q, r=s,  mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
-         d3 <- dtmvnorm.marginal2(xq=a[q], xr=b[s], q=q, r=s,  mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
-         d4 <- dtmvnorm.marginal2(xq=b[q], xr=b[s], q=q, r=s,  mean=rep(0,N), sigma=sigma, lower=lower, upper=upper)
-         F2[q,s] <- (d1 - d2) - (d3 - d4)
+         d <- dtmvnorm.marginal2(
+           xq=c(a[q], b[q], a[q], b[q]),
+           xr=c(a[s], a[s], b[s], b[s]), q=q, r=s,  
+           mean=zero_mean, sigma=sigma, lower=lower, upper=upper, pmvnorm.algorithm=pmvnorm.algorithm)
+         F2[q,s] <- (d[1] - d[2]) - (d[3] - d[4])  
        }
      }
    }
@@ -184,7 +180,7 @@ mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)),
   }
     	
   # 4. Rückverschiebung um +mean für (mu, sigma)-case
-  TMEAN = TMEAN + mean
+  TMEAN <- TMEAN + mean
   
   return(list(tmean=TMEAN, tvar=TVAR))
 }
@@ -222,7 +218,7 @@ mtmvnorm.quadrature <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(
   m.integration<-numeric(k)
   for (i in 1:k)
   {
-    m.integration[1]=integrate(expectation, lower[i], upper[i], n=i)$value 
+    m.integration[i] <- integrate(expectation, lower[i], upper[i], n=i)$value 
   }
   
   # Determine variances from one-dimensional marginal distribution using integration
@@ -230,7 +226,7 @@ mtmvnorm.quadrature <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(
   v.integration<-numeric(k)
   for (i in 1:k)
   {
-    v.integration[1]=integrate(variance, lower[i], upper[i], n=i)$value 
+    v.integration[i] <- integrate(variance, lower[i], upper[i], n=i)$value 
   }
   
   return(list(m=m.integration, v=v.integration))

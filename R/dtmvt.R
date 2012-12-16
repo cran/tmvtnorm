@@ -36,8 +36,8 @@ dtmvt <- function(x, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), df 
 	return(f)
 }
 
+if (FALSE) {
 # Example
-
 x1<-seq(-2, 3, by=0.1)
 x2<-seq(-2, 3, by=0.1)
 
@@ -76,4 +76,4 @@ contour(x1, x2, d, nlevels=5, main="Truncated Multivariate t Density",
 contour(x1, x2, d2, nlevels=5, add=TRUE, col="red")
 abline(v=-1, lty=3, lwd=2)
 abline(h=-1, lty=3, lwd=2)
-
+}

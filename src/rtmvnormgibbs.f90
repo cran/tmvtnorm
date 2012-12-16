@@ -158,6 +158,181 @@ end do
 call rndend()
 end subroutine rtmvnormgibbscov
 
+! Gibbs sampling with p general linear constraints a <= Cx <= b
+! with r >= d linear constraints. C is (r x d), x (d x 1), a,b (r x 1).
+! x0 must satisfy the constraints a <= C x0 <= b.
+!
+! @param n number of random sample to generate by Gibbs sampling
+! @param d dimension (d >= 2)
+! @param r number of linear constraints
+! @param mean mean vector of dimension d (d x 1)
+! @param sigma covariance matrix (d x d)
+! @param C matrix for linear constraints (r x d)
+! @param a lower bound for linear constraints (r x 1)
+! @param b upper bound for linear constraints (r x 1)
+! @param x0 Startvektor (d x 1)
+! @param burnin Number of Burn-in samples to be discarded
+! @param thinning thinning factor for thinning the Markov chain
+! @return return value X --> vektor (n * d) --> can be coerced into a (n x d) matrix
+subroutine rtmvnormgibbscov2(n, d, r, mean, sigma, C, a, b, x0, burnin, thinning, X)
+
+IMPLICIT NONE
+
+integer :: n, d, r, i, j, k = 1, l, ind = 0, burnin, thinning
+
+! subindex "-i"
+integer, dimension(d-1) :: minus_i
+
+double precision :: unifrnd, qnormr, pnormr, u, q, prob, Fa, Fb, mu_i, s2
+double precision, dimension(n*d), INTENT(INOUT) :: X
+double precision, dimension(d-1)     :: s3
+double precision, dimension(d)       :: x0, xr, mean, sd
+double precision, dimension(r)       :: a, b
+double precision, dimension(r, d)    :: C
+double precision :: bound1, bound2, lower, upper
+
+! Kovarianzmatrix sigma und Partitionen Sigma_i, sigma_ii und S
+double precision, dimension(d, d)    :: sigma
+double precision, dimension(d, d-1)  :: Sigma_12
+double precision                     :: Sigma_11
+double precision, dimension(d-1,d-1) :: Sigma_22
+! Sigma_22_inv (d-1 x d-1) ist die Inverse von Sigma_22
+double precision, dimension(d-1,d-1) :: Sigma_22_inv
+
+! Liste von d mal 1 x (d-1) Matrizen = d x (d-1) Matrix
+double precision, dimension(d, d-1)   :: P
+
+! Deklarationen fürs Matrix-Invertieren mit LAPACK-Routinen (Dimension d-1)
+double precision, dimension( d-1 )    :: work
+! ipiv = pivot indices
+integer, dimension( d-1 )             :: ipiv
+! lda = leading dimension
+integer                               :: m, lda, lwork, info
+
+INTEGER, DIMENSION(1) :: seed
+seed(1) = 12345
+
+! initialise R random number generator
+call rndstart()
+!CALL RANDOM_SEED
+!CALL RANDOM_SEED (SIZE=K)           ! Sets K = N
+!CALL RANDOM_SEED (PUT = SEED (1:K)) ! Uses the starting value
+!                                    !     given by the user
+
+
+m    =d-1
+lda  =d-1
+lwork=d-1
+ind  = 0
+
+! Partitioning of sigma
+! sigma   = [ Sigma_11 Sigma_12 ] = [ Sigma_{i,i}   Sigma_{i,-i} ]
+! (d x d)   [                   ]   [ (1 x 1)        (1 x d-1)   ]
+!           [ Sigma_21 Sigma_22 ]   [ Sigma_{-i,i}  Sigma_{-i,-i}]
+!           [                   ]   [ (d-1 x 1)      (d-1 x d-1) ]
+! List of conditional variances sd(i) can be precalculated
+do i = 1,d
+  ! subindex "-i"
+  minus_i  = (/ (j, j=1,i-1), (j, j=i+1,d) /)
+
+  Sigma_22      = sigma(minus_i, minus_i) ! Sigma_{-i,-i} : (d-1) x (d-1)
+  Sigma_11      = sigma(i,i)              ! Sigma_{i,i}   : 1 x 1
+  Sigma_12(i,:) = sigma(i, minus_i)       ! Sigma_{i,-i}  : 1 x (d-1)
+
+  ! Matrix Sigma_22 --> Sigma_22_inv umkopieren
+  do k=1,(d-1)
+    do l=1,(d-1)
+      Sigma_22_inv(k,l) = Sigma_22(k,l)
+    end do
+  end do
+
+  ! Matrix invertieren
+  ! LU-Faktorisierung (Dreieckszerlegung) der Matrix S_inv
+  call dgetrf( m, m, Sigma_22_inv, lda, ipiv, info )
+
+  ! Inverse der LU-faktorisierten Matrix S_inv
+  call dgetri( m, Sigma_22_inv, lda, ipiv, work, lwork, info )
+  P(i,:) = pack(matmul(Sigma_12(i,:), Sigma_22_inv), .TRUE.)  ! (1 x d-1) %*% (d-1 x d-1) = (1 x d-1)
+  s2 = 0
+  do j = 1,d-1
+    s2 = s2 + P(i,j) * Sigma_12(i,j)
+  end do
+  sd(i)        = sqrt(sigma(i,i) - s2) ! (1 x d-1) * (d-1 x 1) --> sd[[i]] ist (1,1)
+end do
+
+! start value
+xr = x0
+
+! Actual number of samples to create:
+! #burn-in-samples + n * #thinning-factor
+
+!For all samples n times the thinning factor
+do j = 1,(burnin + n * thinning)
+
+  ! For all dimensions
+  do i = 1,d
+    !print '("i=",I3)',i
+    ! Berechnung von bedingtem Erwartungswert und bedingter Varianz:
+    ! bedingte Varianz hängt nicht von x[-i] ab!
+    ! subindex "-i"
+    minus_i  = (/ (k, k=1,i-1), (k, k=i+1,d) /)
+
+    ! mu_i     = mean(i)    + P[[i]] %*% (x(-i) - mean(-i))
+    s3(1:(d-1))= xr(minus_i) - mean(minus_i)
+    s2 = 0
+    do k = 1,d-1
+      s2 = s2 + P(i,k) * s3(k)
+    end do
+    mu_i       = mean(i) + s2
+
+    ! TODO: Set to -Inf/+Inf
+    lower = -1000.0d0
+    upper = 1000d0
+    ! Determine lower bounds for x[i] using all linear constraints relevant for x[i]
+    do k = 1,r
+      if (C(k,i) == 0 ) then
+        CYCLE
+      end if
+      s2 = dot_product(C(k,minus_i), xr(minus_i))
+      bound1 = (a(k)- s2) /C(k, i)
+      bound2 = (b(k)- s2) /C(k, i)
+
+      if (C(k, i) > 0) then
+        lower = max(lower, bound1)
+        upper = min(upper, bound2)
+      else
+        lower = max(lower, bound2)
+        upper = min(upper, bound1)
+      end if
+    end do
+
+    !print '("mu_i = ",f6.3)', mu_i
+    !print '("sd(i) = ",f6.3)', sd(i)
+    !print '("lower = ",f6.3)', lower
+    !print '("upper = ",f6.3)',upper
+    Fa         = pnormr(lower, mu_i, sd(i), 1, 0)
+    Fb         = pnormr(upper, mu_i, sd(i), 1, 0)
+    u          = unifrnd()
+    !call RANDOM_NUMBER(u)
+    prob       = u * (Fb - Fa) + Fa
+    q          = qnormr(prob, 0.0d0, 1.0d0, 1, 0)
+    xr(i)      = mu_i + sd(i) * q
+    !print '("xr(i)=",f6.3)',xr(i)
+
+    ! Nur für j > burnin samples aufzeichnen, Default ist thinning = 1
+    ! bei Thinning nur jedes x-te Element nehmen
+    if (j > burnin .AND. mod(j - burnin,thinning) == 0) then
+      ind        = ind + 1
+      X(ind)     = xr(i)
+    end if
+  end do
+end do
+
+! reset R random number generator
+call rndend()
+end subroutine rtmvnormgibbscov2
+
+
 ! @param n number of random sample to generate by Gibbs sampling
 ! @param d dimension (d >= 2)
 ! @param mean mean vector of dimension d (d x 1)

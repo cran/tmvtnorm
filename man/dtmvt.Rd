@@ -64,15 +64,15 @@ Samuel Kotz, Saralees Nadarajah (2004). Multivariate t Distributions and Their A
 \examples{
 # Example
 
-x1<-seq(-2, 3, by=0.1)
-x2<-seq(-2, 3, by=0.1)
+x1 <- seq(-2, 3, by=0.1)
+x2 <- seq(-2, 3, by=0.1)
 
-mean=c(0,0)
-sigma=matrix(c(1, -0.5, -0.5, 1), 2, 2)
-lower=c(-1,-1)
+mean <- c(0,0)
+sigma <- matrix(c(1, -0.5, -0.5, 1), 2, 2)
+lower <- c(-1,-1)
 
 
-density<-function(x)
+density <- function(x)
 {
 	z=dtmvt(x, mean=mean, sigma=sigma, lower=lower)
 	z
@@ -90,10 +90,10 @@ fgrid <- function(x, y, f)
 }
 
 # compute multivariate-t density d for grid
-d=fgrid(x1, x2, function(x) dtmvt(x, mean=mean, sigma=sigma, lower=lower))
+d <- fgrid(x1, x2, function(x) dtmvt(x, mean=mean, sigma=sigma, lower=lower))
 
 # compute multivariate normal density d for grid
-d2=fgrid(x1, x2, function(x) dtmvnorm(x, mean=mean, sigma=sigma, lower=lower))
+d2 <- fgrid(x1, x2, function(x) dtmvnorm(x, mean=mean, sigma=sigma, lower=lower))
 
 # plot density as contourplot
 contour(x1, x2, d, nlevels=5, main="Truncated Multivariate t Density", 

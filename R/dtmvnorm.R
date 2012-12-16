@@ -10,7 +10,8 @@ source("R/rtmvnorm.R")
 # @param upper oberer Trunkierungsvektor (n x 1) mit lower <= x <= upper
 # @param margin if NULL then joint density, if MARGIN=1 then first marginal density, if MARGIN=c(1,2) 
 #               then bivariate marginal density for x_1 and x_2
-dtmvnorm <- function(x, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), lower = rep( -Inf, length = length(mean)), upper = rep( Inf, length = length(mean)), 
+dtmvnorm <- function(x, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), 
+  lower = rep( -Inf, length = length(mean)), upper = rep( Inf, length = length(mean)), 
 		 log = FALSE, margin=NULL)
 {
   # check of standard tmvnorm arguments
@@ -56,7 +57,7 @@ dtmvnorm <- function(x, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), 
   }
     
   # Anzahl der Beobachtungen
-  T = nrow(x)
+  T <- nrow(x)
   
   # check for each row if in support region
   insidesupportregion <- logical(T)
@@ -68,7 +69,12 @@ dtmvnorm <- function(x, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), 
   # density value for points outside the support region
   dv = if (log) { -Inf } else { 0 }
   
-  f <- ifelse(insidesupportregion, dmvnorm(x, mean=mean, sigma=sigma, log=log) / pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma), dv)
+  f <- ifelse(insidesupportregion, 
+       ifelse(log, 
+        dmvnorm(x, mean=mean, sigma=sigma, log=TRUE) - log(pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma)), 
+        dmvnorm(x, mean=mean, sigma=sigma, log=FALSE) / pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma)
+       ), 
+       dv)
   return(f)
 }
 
