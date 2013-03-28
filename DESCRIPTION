@@ -1,6 +1,6 @@
 Package: tmvtnorm
-Version: 1.4-7
-Date: 2012-12-16
+Version: 1.4-8
+Date: 2013-03-28
 Title: Truncated Multivariate Normal and Student t Distribution
 Author: Stefan Wilhelm <wilhelm@financial.com> with contributions from
         Manjunath B G <bgmanjunath@gmail.com>
@@ -16,6 +16,7 @@ Description: Random number generation for the truncated multivariate
         multinormal case.
 License: GPL (>= 2)
 URL: http://www.r-project.org
-Packaged: 2012-12-17 15:17:46 UTC; stefan
+Packaged: 2013-03-30 11:59:08 UTC; stefan
+NeedsCompilation: yes
 Repository: CRAN
-Date/Publication: 2012-12-17 16:56:05
+Date/Publication: 2013-03-30 13:39:47

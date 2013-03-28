@@ -1,5 +1,12 @@
 User visible changes in tmvtnorm package
 
+changes in tmvtnorm  1.4-8 (2013-03-29)
+
+# bugfix in dtmvnorm(...,margin=NULL). Introduced in 1.4-7. Reported by Julius.Vainora [julius.vainora@gmail.com]
+# bugfix in rtmvt(..., algorithm="gibbs"): Algorithm="gibbs" was not forwarded properly to rtmvnorm(). Reported by Aurelien Bechler [aurelien.bechler@agroparistech.fr]
+# allow non-integer degrees of freedom in rtmvt, e.g. rtmvt(..., df=3.2). Suggested by Aurelien Bechler [aurelien.bechler@agroparistech.fr]
+  Rejection sampling does not work with non-integer df, only Gibbs sampling.
+
 changes in tmvtnorm  1.4-7 (2012-11-29)
 
 # new method rtmvnorm2() for drawing random samples with 

@@ -1,13 +1,12 @@
-4c72ca6181b1c8b3f856c665786a171d *DESCRIPTION
+944332e34120fdfd1066c01081fd8241 *DESCRIPTION
 2016814cf02de4714f782698282080a6 *NAMESPACE
-dfe7ccbc592dfb0b16e2df335392b611 *NEWS
+6180f4e8aff1af8f5b99ca3f5c94c06f *NEWS
 8a43a80501e4f0d284d8dad44b1ff01f *R/bivariate-marginal-density.R
 a1a7ec7c15e68c65e72badf55e0ddb4a *R/checkTmvArgs.R
 479f264a0341c82ac78ef72cd3d2672b *R/dtmvnorm-marginal.R
-02c838d2527f3092998eea2e197d5476 *R/dtmvnorm.R
+405b00c540e5a3196dc7da3208cc6ca3 *R/dtmvnorm.R
 a17c645dd934398b4640de0fd7f3a54a *R/dtmvt.R
 c96ae27fd43a21521adef2e6903591be *R/mtmvnorm.R
-3884f9d439d3c15fcdb26f57fcf5f9f3 *R/onLoad.R
 a96cbc560f21e70baf7c20844adafd6c *R/ptmvnorm-marginal.R
 00f8f84be42685f1a3f29c5719780191 *R/ptmvnorm.R
 3e75d9a8d7fb267900d6d0a954f22b96 *R/ptmvt-marginal.R
@@ -15,7 +14,7 @@ a96cbc560f21e70baf7c20844adafd6c *R/ptmvnorm-marginal.R
 6db4e4dd6eed11a0bfdfb2931f90ad6c *R/qtmvnorm-marginal.R
 4a1ba3e6e53994fd23aa5f16253be134 *R/rtmvnorm.R
 0fd54c003f22e8224e09b356360d903a *R/rtmvnorm2.R
-d1a1b5e716204e212126ec989064297c *R/rtmvt.R
+919b77e2c112e757564e7c45de982b19 *R/rtmvt.R
 a49359a68b29c73b8ffb8d8ee1f06fcb *R/tmvnorm-estimation-GMM.R
 77f5cbab362cfbfa34a5095eec2656a5 *R/tmvnorm-estimation.R
 05f0324f7a52081a7faca3fe125d2879 *demo/00Index
@@ -23,7 +22,7 @@ a49359a68b29c73b8ffb8d8ee1f06fcb *R/tmvnorm-estimation-GMM.R
 8cb92af9f083a0e444c58f5c82d79ace *demo/demo2.R
 0dc224491642cea64607b4d81b2a5abf *inst/CITATION
 f55b59ffbaa8c7e74942f7c32ee74430 *inst/doc/GibbsSampler.Rnw
-e92b633069b510300bd91fddc04de3f1 *inst/doc/GibbsSampler.pdf
+ac81a80795b6ce63ecfff28209808114 *inst/doc/GibbsSampler.pdf
 28065219dbfddba2e85a093c5a456c95 *inst/doc/tmvtnorm.bib
 3419ad200c683a01965d1d351d33c39a *man/dmvnorm.marginal.Rd
 46aec3318f77c2054b554dd61d0d8773 *man/dtmvnorm.marginal2.Rd
@@ -37,7 +36,7 @@ c48a6ae141dea1f55e97ea86275ee3f5 *man/ptmvnorm.marginal.Rd
 342f510aae0e72a5d7600b4e3ca1db11 *man/qtmvnorm-marginal.Rd
 4ebf5d4c11221b652716107dd1d57ee3 *man/rtmvnorm.Rd
 6679f9d0fc409cd57555b9a2f0af55d2 *man/rtmvnorm2.Rd
-00afd8b7bebba108462cc3c281d03cd0 *man/rtmvt.Rd
+53a03043903568c0ea2662e21b6fe984 *man/rtmvt.Rd
 56ff9ee8d7d9d645a83ccf47d5fe5b1e *man/tmvnorm.Rd
 ae25215cedbedbe2d9de559d8f4f5d66 *src/Fortran2CWrapper.c
 3996e7c16bfb96fad295ee425815cb4d *src/Makevars

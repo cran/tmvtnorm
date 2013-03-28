@@ -66,15 +66,18 @@ dtmvnorm <- function(x, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)),
     insidesupportregion[i] = all(x[i,] >= lower & x[i,] <= upper & !any(is.infinite(x)))
   }
   
-  # density value for points outside the support region
-  dv = if (log) { -Inf } else { 0 }
+  if(log) {
+    # density value for points inside the support region
+    dvin <- dmvnorm(x, mean=mean, sigma=sigma, log=TRUE) - log(pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma)) 
+    # density value for points outside the support region
+    dvout <- -Inf
+  } else {
+    dvin <- dmvnorm(x, mean=mean, sigma=sigma, log=FALSE) / pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma)
+    dvout <- 0
+  }
   
-  f <- ifelse(insidesupportregion, 
-       ifelse(log, 
-        dmvnorm(x, mean=mean, sigma=sigma, log=TRUE) - log(pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma)), 
-        dmvnorm(x, mean=mean, sigma=sigma, log=FALSE) / pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma)
-       ), 
-       dv)
+  
+  f <- ifelse(insidesupportregion, dvin, dvout)
   return(f)
 }
 

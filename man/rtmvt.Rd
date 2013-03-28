@@ -20,7 +20,7 @@ rtmvt(n, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), df = 1,
  \item{n}{Number of random points to be sampled. Must be an integer >= 1.}
  \item{mean}{Mean vector, default is \code{rep(0, length = ncol(x))}.}
  \item{sigma}{Covariance matrix, default is \code{diag(ncol(x))}.}
- \item{df}{Degrees of freedom parameter}
+ \item{df}{Degrees of freedom parameter (positive, may be non-integer)}
  \item{lower}{Vector of lower truncation points,\\ 
               default is \code{rep(-Inf, length = length(mean))}.}
  \item{upper}{Vector of upper truncation points,\\ 
@@ -32,8 +32,14 @@ rtmvt(n, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), df = 1,
 }
 
 \details{
- We sample \eqn{x \sim T(\mu, \Sigma, df)}{x ~ T(mean, Sigma, df)} subject to the rectangular truncation \eqn{lower \le x \le upper}{lower <= x <= upper}.
- Currently, two random number generation methods are implemented: rejection sampling and the Gibbs Sampler.
+We sample \eqn{x \sim T(\mu, \Sigma, df)}{x ~ T(mean, Sigma, df)} subject to the rectangular truncation \eqn{lower \le x \le upper}{lower <= x <= upper}.
+Currently, two random number generation methods are implemented: rejection sampling and the Gibbs Sampler.
+
+For rejection sampling \code{algorithm="rejection"}, we sample from \code{\link[mvtnorm]{rmvt}}
+and retain only samples inside the support region. The acceptance probability
+will be calculated with \code{\link[mvtnorm]{pmvt}}. \code{\link[mvtnorm]{pmvt}} does only accept
+integer degrees of freedom \code{df}. For non-integer \code{df}, \code{algorithm="rejection"}
+will throw an error, so please use \code{algorithm="gibbs"} instead.  
  
 The arguments to be passed along with \code{algorithm="gibbs"} are:
 \describe{

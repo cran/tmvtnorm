@@ -33,11 +33,12 @@ rtmvt <- function(n, mean = rep(0, nrow(sigma)),
     stop("n must be a integer scalar > 0")
   }
   
-  if (df < 1 || !is.numeric(df) || df != as.integer(df) || length(df) > 1) {
-	  stop("df must be a integer scalar > 0")
+  if (df < 1 || !is.numeric(df) || length(df) > 1) {
+	  stop("df must be a numeric scalar > 0")
   }
   
   if (algorithm == "rejection") {
+    if (df != as.integer(df)) stop("Rejection sampling currenly works only for integer degrees of freedom. Consider using algorithm='gibbs'.")
     retval <- rtmvt.rejection(n, mean, sigma, df, lower, upper)  
   } else if (algorithm == "gibbs") {
     retval <- rtmvt.gibbs(n, mean, sigma, df, lower, upper, ...)
@@ -56,7 +57,9 @@ rtmvt <- function(n, mean = rep(0, nrow(sigma)),
 # @param df degrees of freedom parameter
 # @param lower unterer Trunkierungsvektor (k x 1) mit lower <= x <= upper
 # @param upper oberer Trunkierungsvektor (k x 1) mit lower <= x <= upper
-rtmvt.rejection <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), df = 1, lower = rep(-Inf, length = length(mean)), upper = rep( Inf, length = length(mean)))
+rtmvt.rejection <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)), df = 1, 
+  lower = rep(-Inf, length = length(mean)), 
+  upper = rep( Inf, length = length(mean)))
 {
   # No check of input parameters, checks are done in rtmvnorm()!
   
@@ -174,13 +177,13 @@ rtmvt.gibbs <- function (n=1,
 	  # If no start value is specified, 
     # the initial value/start value for Z drawn from TN(0,\Sigma) 
     # with truncation point a = a-mu and b = b-mu
-    Z <- rtmvnorm(1, mean=rep(0,k), sigma, lower-mu, upper-mu)
+    Z <- rtmvnorm(1, mean=rep(0,k), sigma=sigma, lower=lower-mu, upper=upper-mu, algorithm="gibbs")
   }
 
   # Algorithm begins :
   
   # Draw from Uni(0,1)
-  U = runif((S + n*thinning) * k)
+  U <- runif((S + n*thinning) * k)
   indU <- 1 # Index for accessing U
 
   # List of conditional standard deviations can be pre-calculated
@@ -192,11 +195,11 @@ rtmvt.gibbs <- function (n=1,
   for(i in 1:k)
   {
     # Partitioning of Sigma
-    Sigma    = sigma[-i,-i] # (k-1) x (k-1)
-    sigma_ii = sigma[i,i]    # 1 x 1
-    Sigma_i  = sigma[i,-i]   # (k-1) x 1
-    P[[i]]   = t(Sigma_i) %*% solve(Sigma)
-    sd[[i]]  = sqrt(sigma_ii - P[[i]] %*% Sigma_i)
+    Sigma    <- sigma[-i,-i] # (k-1) x (k-1)
+    sigma_ii <- sigma[i,i]    # 1 x 1
+    Sigma_i  <- sigma[i,-i]   # (k-1) x 1
+    P[[i]]   <- t(Sigma_i) %*% solve(Sigma)
+    sd[[i]]  <- sqrt(sigma_ii - P[[i]] %*% Sigma_i)
   }
   
   for(i in (1-S):(n*thinning))
