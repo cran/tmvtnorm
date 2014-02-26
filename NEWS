@@ -1,5 +1,8 @@
 User visible changes in tmvtnorm package
 
+changes in tmvtnorm  1.4-9 (2014-03-03)
+# Moved package vignette to vignettes/ directory to be consistent with R 3.1.0
+
 changes in tmvtnorm  1.4-8 (2013-03-29)
 
 # bugfix in dtmvnorm(...,margin=NULL). Introduced in 1.4-7. Reported by Julius.Vainora [julius.vainora@gmail.com]

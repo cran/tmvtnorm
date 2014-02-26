@@ -276,7 +276,8 @@ D     <- matrix(c(1, 1,
                   1, -1), 2, 2)                   
 
 X <- rtmvnorm(n=10000, mean, sigma, lower=a, upper=b, D=D, algorithm="gibbsR")
-plot(X, main="Gibbs sampling for multivariate normal with linear constraints according to Geweke (1991)")
+plot(X, main="Gibbs sampling for multivariate normal 
+              with linear constraints according to Geweke (1991)")
 
 # mark linear constraints as lines
 for (i in 1:nrow(D)) {
