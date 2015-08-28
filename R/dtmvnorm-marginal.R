@@ -9,8 +9,8 @@
 
 # Literatur:
 #
-# Genz, A. (1992). Numerical computation of multivariate normal probabilities. Journal of Computational and Graphical Statistics, 1, 141–150
-# Genz, A. (1993). Comparison of methods for the computation of multivariate normal probabilities. Computing Science and Statistics, 25, 400–405
+# Genz, A. (1992). Numerical computation of multivariate normal probabilities. Journal of Computational and Graphical Statistics, 1, 141-150
+# Genz, A. (1993). Comparison of methods for the computation of multivariate normal probabilities. Computing Science and Statistics, 25, 400-405
 # Horrace (2005).
 # Jack Cartinhour (1990): One-dimensional marginal density functions of a truncated multivariate normal density function
 # Communications in Statistics - Theory and Methods, Volume 19, Issue 1 1990 , pages 197 - 203
