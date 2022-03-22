@@ -47,7 +47,7 @@ checkTmvArgs <- function(mean, sigma, lower, upper)
 	}
 	
 	if (any(lower>=upper)) {
-		stop("lower must be smaller than or equal to upper (lower<=upper)")
+		stop("lower bound should be strictly less than the upper bound (lower<upper)")
 	}
 	
 	# checked arguments

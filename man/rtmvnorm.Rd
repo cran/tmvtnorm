@@ -148,7 +148,7 @@ We refer to autocorrelation plots in order to determine optimal thinning.
 \references{
 
 Alan Genz, Frank Bretz, Tetsuhisa Miwa, Xuefei Mi, Friedrich Leisch, Fabian Scheipl, Torsten Hothorn (2009). mvtnorm:
-  Multivariate Normal and t Distributions. R package version 0.9-7. URL \url{http://CRAN.R-project.org/package=mvtnorm} 
+  Multivariate Normal and t Distributions. R package version 0.9-7. URL \url{https://CRAN.R-project.org/package=mvtnorm} 
 
 Johnson, N./Kotz, S. (1970). Distributions in Statistics: Continuous Multivariate Distributions
 \emph{Wiley & Sons}, pp. 70--73

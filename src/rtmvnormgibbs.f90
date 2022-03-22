@@ -158,7 +158,7 @@ end do
 call rndend()
 end subroutine rtmvnormgibbscov
 
-! Gibbs sampling with p general linear constraints a <= Cx <= b
+! Gibbs sampling based on covariance matrix and general linear constraints a <= Cx <= b
 ! with r >= d linear constraints. C is (r x d), x (d x 1), a,b (r x 1).
 ! x0 must satisfy the constraints a <= C x0 <= b.
 !
@@ -332,7 +332,9 @@ end do
 call rndend()
 end subroutine rtmvnormgibbscov2
 
-
+! Gibbs sampling based on precision matrix H and a <= x <= b (no linear constraints)
+! x,a,b are (d x 1).
+!
 ! @param n number of random sample to generate by Gibbs sampling
 ! @param d dimension (d >= 2)
 ! @param mean mean vector of dimension d (d x 1)
@@ -426,6 +428,135 @@ end do
 ! reset R random number generator
 call rndend()
 end subroutine rtmvnormgibbsprec
+
+! Gibbs sampling based on precision matrix H and general linear constraints a <= Cx <= b
+! with r >= d linear constraints. C is (r x d), x (d x 1), a,b (r x 1).
+! x0 must satisfy the constraints a <= C x0 <= b.
+!
+! @param n number of random sample to generate by Gibbs sampling
+! @param d dimension (d >= 2)
+! @param r number of linear constraints
+! @param mean mean vector of dimension d (d x 1)
+! @param H precision matrix (d x d)
+! @param C matrix for linear constraints (r x d)
+! @param a lower bound for linear constraints (r x 1)
+! @param b upper bound for linear constraints (r x 1)
+! @param x0 start value (d x 1)
+! @param burnin number of Burn-in samples to be discarded
+! @param thinning thinning factor for thinning the Markov chain
+! @return return value X --> vektor (n * d) --> can be coerced into a (n x d) matrix
+subroutine rtmvnormgibbsprec2(n, d, r, mean, H, C, a, b, x0, burnin, thinning, X)
+
+IMPLICIT NONE
+
+integer :: n, d, r, i, j, k, ind = 0, burnin, thinning
+
+! subindex "-i"
+integer, dimension(d-1) :: minus_i
+
+double precision :: unifrnd, qnormr, pnormr, u, q, prob, Fa, Fb, mu_i, s2
+double precision, dimension(d, d)    :: H
+! Liste von d mal 1 x (d-1) Matrizen = d x (d-1) Matrix  als H[i, -i]
+double precision, dimension(d, d-1)   :: P
+double precision, dimension(d)    :: H_inv_ii
+
+double precision, dimension(n*d), INTENT(INOUT) :: X
+double precision, dimension(d-1)     :: s3
+double precision, dimension(d)       :: x0, xr, mean, sd
+double precision, dimension(r)       :: a, b
+double precision, dimension(r, d)    :: C
+double precision :: bound1, bound2, lower, upper
+
+! initialise R random number generator
+call rndstart()
+! initialise Fortran random number generator
+! CALL RANDOM_SEED
+
+! SW: I do not know why, but we have to reset ind each time!!!
+! If we forget this line, ind will be incremented further and then Fortran crashes!
+ind  = 0
+
+! List of conditional variances sd(i) can be precalculated
+! Vector of conditional standard deviations sd(i | -i) = H_ii^{-1} = 1 / H[i, i] = sqrt(1 / diag(H))
+! does not depend on x[-i] and can be precalculated before running the chain.
+do i = 1,d
+  minus_i = (/ (k, k=1,i-1), (k, k=i+1,d) /)
+  H_inv_ii(i) = (1.0d0 / H(i, i)) ! H^{-1}(i,i) = 1 / H(i,i)
+  sd(i) = sqrt(H_inv_ii(i)) ! sd(i) is sqrt(H^{-1}(i,i))
+  P(i,:)  = H(i, minus_i)    ! 1 x (d-1)
+end do
+
+! start value
+xr = x0
+
+! Actual number of samples to create:
+! #burn-in-samples + n * #thinning-factor
+
+!For all samples n times the thinning factor
+do j = 1,(burnin + n * thinning)
+
+  ! For all dimensions
+  do i = 1,d
+    ! subindex "-i"
+    minus_i  = (/ (k, k=1,i-1), (k, k=i+1,d) /)
+
+    ! conditional mean mu[i] = E[i | -i] = mean[i] - H_ii^{-1} H[i,-i] (x[-i] - mean[-i])
+    !                    mu_i           <- mean[i]  (1 / H[i,i]) * H[i,-i] %*% (x[-i] - mean[-i])
+    s3(1:(d-1)) = xr(minus_i) - mean(minus_i)
+    s2 = 0
+    do k = 1,d-1
+      s2 = s2 + P(i, k) * s3(k)
+    end do
+    mu_i       = mean(i) - H_inv_ii(i) * s2
+	
+    ! TODO: Set to -Inf/+Inf
+    lower = -1000.0d0
+    upper = 1000d0
+    ! Determine lower bounds for x[i] using all linear constraints relevant for x[i]
+    do k = 1,r
+      if (C(k,i) == 0 ) then
+        CYCLE
+      end if
+      s2 = dot_product(C(k,minus_i), xr(minus_i))
+      bound1 = (a(k)- s2) /C(k, i)
+      bound2 = (b(k)- s2) /C(k, i)
+
+      if (C(k, i) > 0) then
+        lower = max(lower, bound1)
+        upper = min(upper, bound2)
+      else
+        lower = max(lower, bound2)
+        upper = min(upper, bound1)
+      end if
+    end do
+
+    !print '("mu_i = ",f6.3)', mu_i
+    !print '("sd(i) = ",f6.3)', sd(i)
+    !print '("lower = ",f6.3)', lower
+    !print '("upper = ",f6.3)',upper
+
+    Fa         = pnormr(lower, mu_i, sd(i), 1, 0)
+    Fb         = pnormr(upper, mu_i, sd(i), 1, 0)
+    u          = unifrnd()
+    !call RANDOM_NUMBER(u)
+    prob       = u * (Fb - Fa) + Fa
+    q          = qnormr(prob, 0.0d0, 1.0d0, 1, 0)
+    xr(i)      = mu_i + sd(i) * q
+    
+    ! Nur für j > burnin samples aufzeichnen, Default ist thinning = 1
+    ! bei Thinning nur jedes x-te Element nehmen
+    if (j > burnin .AND. mod(j - burnin,thinning) == 0) then
+      ind        = ind + 1
+      X(ind)     = xr(i)
+      !call intpr("ind=", 4, ind, 1)
+      !call dblepr("X(ind)=", 7, X(ind), 1)
+    end if
+  end do
+end do
+
+! reset R random number generator
+call rndend()
+end subroutine rtmvnormgibbsprec2
 
  ! populate map (row --> linked list of matrix elements) for with all entries in Hi, Hj and Hv
  ! if upper_triangular is TRUE, then we assume that only matrix elements with Hi <= Hj are given and we will

@@ -32,6 +32,7 @@
 \author{Stefan Wilhelm\thanks{wilhelm@financial.com}}
 
 \begin{document}
+\SweaveOpts{concordance=TRUE}
 \maketitle
 
 In this note we describe two ways of generating random variables with the Gibbs sampling approach 

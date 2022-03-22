@@ -51,7 +51,7 @@ rtmvnorm.sparseMatrix <- function(n,
 
 # Erzeugt eine Matrix X (n x d) mit Zufallsrealisationen 
 # aus einer Trunkierten Multivariaten Normalverteilung mit d Dimensionen
-# ¸ber Rejection Sampling oder Gibbs Sampler aus einer Multivariaten Normalverteilung.
+# ?ber Rejection Sampling oder Gibbs Sampler aus einer Multivariaten Normalverteilung.
 # If matrix D is given, it must be a (d x d) full rank matrix.
 # Therefore this method can only cover the case with only r <= d linear restrictions.
 # For r > d linear restrictions, please see rtmvnorm2(n, mean, sigma, D, lower, upper),
@@ -87,7 +87,7 @@ rtmvnorm <- function(n,
   lower <- cargs$lower
   upper <- cargs$upper
   
-  if (!is.null(H) && sigma != diag(length(mean))) {
+  if (!is.null(H) && !identical(sigma, diag(length(mean)))) {
    stop("Cannot give both covariance matrix sigma and precision matrix H arguments at the same time")
   }
   else if (!is.null(H) && !inherits(H, "sparseMatrix")) {
@@ -140,10 +140,10 @@ rtmvnorm <- function(n,
 
 # Erzeugt eine Matrix X (n x k) mit Zufallsrealisationen 
 # aus einer Trunkierten Multivariaten Normalverteilung mit k Dimensionen
-# ¸ber Rejection Sampling aus einer Multivariaten Normalverteilung mit der Bedingung
+# ?ber Rejection Sampling aus einer Multivariaten Normalverteilung mit der Bedingung
 # lower <= Dx <= upper
 # 
-# Wenn D keine Diagonalmatrix ist, dann ist gelten lineare Restriktionen f¸r
+# Wenn D keine Diagonalmatrix ist, dann ist gelten lineare Restriktionen f?r
 # lower <= Dx <= upper (siehe Geweke (1991))
 #
 # @param n Anzahl der Realisationen
@@ -181,16 +181,16 @@ rtmvnorm.rejection <- function(n,
     if (alpha <= 0.01) warning(sprintf("Acceptance rate is very low (%s) and rejection sampling becomes inefficient. Consider using Gibbs sampling.", alpha))
     estimatedAlpha <- TRUE
   } else {
-    # TODO: Wie bestimme ich aus lower <= Dx <= upper f¸r r > d Restriktionen die Akzeptanzrate alpha?
+    # TODO: Wie bestimme ich aus lower <= Dx <= upper f?r r > d Restriktionen die Akzeptanzrate alpha?
     # Defere calculation of alpha. Assume for now that all samples will be accepted.
     alpha <- 1
     estimatedAlpha <- FALSE
   }
   
-  # Ziehe wiederholt aus der Multivariaten NV und schaue, wieviel Samples nach Trunkierung ¸brig bleiben
+  # Ziehe wiederholt aus der Multivariaten NV und schaue, wieviel Samples nach Trunkierung ?brig bleiben
   while(numSamples > 0)
   {
-    # Erzeuge N/alpha Samples aus einer multivariaten Normalverteilung: Wenn alpha zu niedrig ist, wird Rejection Sampling ineffizient und N/alpha zu groﬂ. Dann nur N erzeugen
+    # Erzeuge N/alpha Samples aus einer multivariaten Normalverteilung: Wenn alpha zu niedrig ist, wird Rejection Sampling ineffizient und N/alpha zu gro?. Dann nur N erzeugen
     nproposals <- ifelse (numSamples/alpha > 1000000, numSamples, ceiling(max(numSamples/alpha,10)))
     X <- rmvnorm(nproposals, mean=mean, sigma=sigma)
     
@@ -232,7 +232,7 @@ rtmvnorm.rejection <- function(n,
 #
 # Jayesh H. Kotecha and Petar M. Djuric (1999) : GIBBS SAMPLING APPROACH FOR GENERATION OF TRUNCATED MULTIVARIATE GAUSSIAN RANDOM VARIABLES
 #
-# Im univariaten Fall sind die erzeugten Samples unabh‰ngig, 
+# Im univariaten Fall sind die erzeugten Samples unabh?ngig, 
 # deswegen gibt es hier keine Chain im eigentlichen Sinn und auch keinen Startwert/Burn-in/Thinning. 
 #
 # As a change to Kotecha, we do not draw a sample x from the Gaussian Distribution
@@ -304,7 +304,7 @@ rtmvnorm.gibbs <- function(n,
   # Take start value given by user or determine from lower and upper	
   if (!is.null(start.value)) {
     if (length(mean) != length(start.value)) stop("mean and start value have non-conforming size")
-	  if (any(start.value<lower || start.value>upper)) stop("start value is not inside support region") 
+	  if (any(start.value < lower) || any(start.value > upper)) stop("start value is not inside support region") 
 	  x0 <- start.value 
   } else {
     # Start value from support region, may be lower or upper bound, if they are finite, 
@@ -352,7 +352,7 @@ rtmvnorm.gibbs <- function(n,
     for(i in 1:d)
     {
       # Berechnung von bedingtem Erwartungswert und bedingter Varianz:
-      # bedingte Varianz h‰ngt nicht von x[-i] ab!
+      # bedingte Varianz h?ngt nicht von x[-i] ab!
       mu_i  <- mean[i]    + P[[i]] %*% (x[-i] - mean[-i])
       
       # Transformation
@@ -412,7 +412,7 @@ rtmvnorm.gibbs.Precision <- function(n,
   # Take start value given by user or determine from lower and upper
   if (!is.null(start.value)) {
     if (length(mean) != length(start.value)) stop("mean and start value have non-conforming size")
-	  if (any(start.value<lower || start.value>upper)) stop("start value is not inside support region")
+	  if (any(start.value<lower) || any(start.value>upper)) stop("start value is not inside support region")
 	  x0 <- start.value
   } else {
     # Start value from support region, may be lower or upper bound, if they are finite,
@@ -507,7 +507,7 @@ rtmvnorm.gibbs.Fortran <- function(n,
   # Take start value given by user or determine from lower and upper	
   if (!is.null(start.value)) {
     if (length(mean) != length(start.value)) stop("mean and start value have non-conforming size")
-	if (any(start.value<lower || start.value>upper)) stop("start value is not inside support region") 
+	if (any(start.value<lower) || any(start.value>upper)) stop("start value is not inside support region") 
 	x0 <- start.value 
   } else {
     # Start value from support region, may be lower or upper bound, if they are finite, 
@@ -561,7 +561,7 @@ rtmvnorm.gibbs.Fortran <- function(n,
                               NAOK=TRUE, PACKAGE="tmvtnorm")
     }
     else { # H is given in sparse matrix triplet representation
-      # Es muss klar sein, dass nur die obere Dreiecksmatrix (i <= j) ¸bergeben wird...
+      # Es muss klar sein, dass nur die obere Dreiecksmatrix (i <= j) ?bergeben wird...
       sH <- as(H, "dgTMatrix")        # precision matrix as triplet representation 
       # ATTENTION: sH@i and sH@j are zero-based (0..(n-1)), we need it as 1...n
       ind <- sH@i <= sH@j             # upper triangular matrix elements of H[i,j] with i <= j
@@ -600,7 +600,7 @@ rtmvnorm.gibbs.Fortran <- function(n,
 }
 
 
-# Gibbs sampling f¸r Truncated Multivariate Normal Distribution 
+# Gibbs sampling f?r Truncated Multivariate Normal Distribution 
 # with linear constraints based on Geweke (1991): 
 # This is simply a wrapper function around our rectangular sampling version...
 #

@@ -57,7 +57,7 @@ Leppard, P. and Tallis, G. M. (1989). Evaluation of the Mean and Covariance of t
 \emph{Applied Statistics}, \bold{38}, 543--553
 
 Manjunath B G and Wilhelm, S. (2009). Moments Calculation For the Double Truncated Multivariate Normal Density. 
-Working Paper. Available at SSRN: \url{http://ssrn.com/abstract=1472153}
+Working Paper. Available at SSRN: \url{https://www.ssrn.com/abstract=1472153}
 }
 
 \author{Stefan Wilhelm <Stefan.Wilhelm@financial.com>, Manjunath B G <bgmanjunath@gmail.com>}

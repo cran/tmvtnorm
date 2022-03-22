@@ -53,7 +53,7 @@ The density of the truncated distribution \eqn{f_{a,b}(x)} with constraints \eqn
 \references{
 Geweke, J. F. (1991) Efficient simulation from the multivariate normal and Student-t distributions 
  subject to linear constraints and the evaluation of constraint probabilities.
- \url{http://www.biz.uiowa.edu/faculty/jgeweke/papers/paper47/paper47.pdf} 
+ \url{https://www.researchgate.net/publication/2335219_Efficient_Simulation_from_the_Multivariate_Normal_and_Student-t_Distributions_Subject_to_Linear_Constraints_and_the_Evaluation_of_Constraint_Probabilities} 
  
 Samuel Kotz, Saralees Nadarajah (2004). Multivariate t Distributions and Their Applications. 
   \emph{Cambridge University Press}

@@ -74,7 +74,7 @@ Lee, L.-F. (1983). The determination of moments of the doubly truncated multivar
 \emph{Economics Letters}, \bold{11}, 245--250
 
 Manjunath B G and Wilhelm, S. (2009). Moments Calculation For the Double Truncated Multivariate Normal Density. 
-Working Paper. Available at SSRN: \url{http://ssrn.com/abstract=1472153}
+Working Paper. Available at SSRN: \url{https://www.ssrn.com/abstract=1472153}
  
 }
 
