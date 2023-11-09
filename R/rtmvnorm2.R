@@ -143,7 +143,7 @@ rtmvnorm.gibbs2 <- function (n,
     if (!is.null(start.value)) {
         if (length(mean) != length(start.value)) 
             stop("mean and start value have non-conforming size")
-        if (any(D %*% start.value < lower || D %*% start.value > upper)) 
+        if (any(D %*% start.value < lower) || any(D %*% start.value > upper))
             stop("start value does not suffice linear constraints lower <= Dx <= upper")
         x0 <- start.value
     }
@@ -241,7 +241,7 @@ rtmvnorm.gibbs2.Fortran <- function(n,
   if (!is.null(start.value)) {
     if (length(mean) != length(start.value)) stop("mean and start value have non-conforming size")
     if (NCOL(D) != length(start.value) || NROW(D) != length(lower) || NROW(D) != length(upper))  stop("D, start.value, lower, upper have non-conforming size")
-	  if (any(D %*% start.value < lower || D %*% start.value > upper)) stop("start value must lie in simplex defined by lower <= Dx <= upper") 
+	  if (any(D %*% start.value < lower) || any(D %*% start.value > upper)) stop("start value must lie in simplex defined by lower <= Dx <= upper") 
 	  x0 <- start.value 
   } else {
     stop("Must give start.value with lower <= D start.value <= upper")
@@ -260,7 +260,7 @@ rtmvnorm.gibbs2.Fortran <- function(n,
   r <- nrow(D)
   
   # Call to Fortran subroutine
-  # TODO: Aufpassen, ob Matrix D zeilen- oder spaltenweise an Fortran übergeben wird!
+  # TODO: Aufpassen, ob Matrix D zeilen- oder spaltenweise an Fortran Ã¼bergeben wird!
   # Bei sigma ist das wegen Symmetrie egal.
   ret <- .Fortran("rtmvnormgibbscov2",
                               n     = as.integer(n),
