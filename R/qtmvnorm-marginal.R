@@ -1,4 +1,4 @@
-# Berechnet die Quantile der eindimensionalen Randverteilung über uniroot()
+# Berechnet die Quantile der eindimensionalen Randverteilung ueber uniroot()
 #
 # @param p probability
 # @param interval a vector containing the end-points of the interval to be searched by uniroot.

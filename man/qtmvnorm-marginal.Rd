@@ -1,4 +1,3 @@
-\encoding{latin1}
 \name{qtmvnorm-marginal}
 \alias{qtmvnorm.marginal}
 \title{ Quantiles of the Truncated Multivariate Normal Distribution in one dimension}
@@ -29,7 +28,7 @@ qtmvnorm.marginal(p,
                \eqn{P[X \le x] = p}{P[X <= x] = p}, \code{upper.tail} gives \eqn{x} with 
                \eqn{P[X > x] = p} and 
                \code{both.tails} leads to \eqn{x} 
-               with \eqn{P[-x \le X \le x] = p}.}{P[-x <= X <= x] = p}
+               with \eqn{P[-x \le X \le x] = p}{P[-x <= X <= x] = p} }
   \item{n}{ index (1..n) to calculate marginal quantile for}            
   \item{mean}{ the mean vector of length n. }
   \item{sigma}{ the covariance matrix of dimension n. Either \code{corr} or

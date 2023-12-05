@@ -3,8 +3,8 @@ source("R/rtmvnorm.R")
 #
 # vgl. Horrace (2005) "Some Results on the Multivariate Truncated Normal Distribution"
 #
-# @param x Argumentenvektor der Dichte der Länge n oder Matrix (T x n) mit T Beobachtungen
-# @param mean  Mittelwertvektor der Länge n
+# @param x Argumentenvektor der Dichte der Laenge n oder Matrix (T x n) mit T Beobachtungen
+# @param mean  Mittelwertvektor der Laenge n
 # @param sigma Kovarianzmatrix (n x n)
 # @param lower unterer Trunkierungsvektor (n x 1) mit lower <= x <= upper
 # @param upper oberer Trunkierungsvektor (n x 1) mit lower <= x <= upper
@@ -25,8 +25,8 @@ dtmvnorm <- function(x, mean = rep(0, nrow(sigma)), sigma = diag(length(mean)),
   if (!is.null(margin)) {
 	# Aufpassen! dtmvnorm() nimmt als Argumente auch eine (T x n)-Matrix,
 	# dtmvnorm.marginal() nimmt nur einen Vektor
-	# dtmvnorm.marginal2() nimmt 2 Vektoren der gleichen Länge
-	# Aufpassen mit Checks auf die Länge von x
+	# dtmvnorm.marginal2() nimmt 2 Vektoren der gleichen Laenge
+	# Aufpassen mit Checks auf die Laenge von x
 	# Aufpassen mit dem log=TRUE Argument!
     if (!length(margin) %in% c(1, 2))
 	  stop("Length of margin must be either 1 (one-dimensional marginal density) or 2 (bivariate marginal density).")

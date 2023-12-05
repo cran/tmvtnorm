@@ -34,8 +34,8 @@ ptmvt <- function(
 		stop("lowerx must be smaller than or equal to upperx (lowerx<=upperx)")
 	
 	# Aufpassen: 
-	# Wir müssen garantieren, dass nur innerhalb des Support-Bereichs lower <= x <= upper integriert wird. Sonst kann Ergebnis >= 1 rauskommen.
-	# Wenn einzelne Komponenten von lowerx <= lower sind, dann von der Untergrenze lower integrieren. Analog für upperx >= upper
+	# Wir muessen garantieren, dass nur innerhalb des Support-Bereichs lower <= x <= upper integriert wird. Sonst kann Ergebnis >= 1 rauskommen.
+	# Wenn einzelne Komponenten von lowerx <= lower sind, dann von der Untergrenze lower integrieren. Analog fuer upperx >= upper
 	f <- pmvt(lower=pmax(lowerx, lower), upper=pmin(upperx, upper), delta=mean, sigma=sigma, df=df, maxpts = maxpts, abseps = abseps, releps = releps, type="shifted") / 
 			pmvt(lower=lower, upper=upper, delta=mean, sigma=sigma, df=df, maxpts = maxpts, abseps = abseps, releps = releps, type="shifted")
 	return(f)

@@ -1,5 +1,4 @@
 % --- Source file: dtmvnorm-marginal.Rd ---
-\encoding{latin1} 
 \name{dtmvnorm.marginal}
 \alias{dtmvnorm.marginal}
 

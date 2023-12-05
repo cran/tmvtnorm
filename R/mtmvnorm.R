@@ -173,26 +173,26 @@ mtmvnorm <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(mean)),
   	}
    }
     	
-   # 3. Bestimme Varianz Cov(X_i, X_j) = E[X_i, X_j] - E[X_i]*E[X_j] für (0, sigma)-case
+   # 3. Bestimme Varianz Cov(X_i, X_j) = E[X_i, X_j] - E[X_i]*E[X_j] fuer (0, sigma)-case
    TVAR <- TVAR - TMEAN %*% t(TMEAN)
   } else {
    TVAR = NA
   }
     	
-  # 4. Rückverschiebung um +mean für (mu, sigma)-case
+  # 4. Rueckverschiebung um +mean fuer (mu, sigma)-case
   TMEAN <- TMEAN + mean
   
   return(list(tmean=TMEAN, tvar=TVAR))
 }
 
-# Bestimmung von Erwartungswert und Kovarianzmatrix über numerische Integration und die eindimensionale Randdichte
+# Bestimmung von Erwartungswert und Kovarianzmatrix ueber numerische Integration und die eindimensionale Randdichte
 # d.h. 
 # E[X_i]       = \int_{a_i}^{b_i}{x_i * f(x_i) d{x_i}}
 # Var[x_i]     = \int_{a_i}^{b_i}{(x_i-\mu_i)^2 * f(x_i) d{x_i}}
 # Cov[x_i,x_j] = \int_{a_i}^{b_i}\int_{a_j}^{b_j}{(x_i-\mu_i)(x_j-\mu_j) * f(x_i,x_j) d{x_i}d{x_j}}
 #
 # Die Bestimmung von E[X_i] und Var[x_i]
-# Die Bestimmung der Kovarianz Cov[x_i,x_j] benötigt die zweidimensionale Randdichte.
+# Die Bestimmung der Kovarianz Cov[x_i,x_j] benoetigt die zweidimensionale Randdichte.
 # 
 #
 # @param mean Mittelwertvektor (k x 1)
@@ -202,7 +202,7 @@ mtmvnorm.quadrature <- function(mean = rep(0, nrow(sigma)), sigma = diag(length(
 {
   k       = length(mean)
   
-  # Bestimmung des Erwartungswerts/Varianz über numerische Integration
+  # Bestimmung des Erwartungswerts/Varianz ?ber numerische Integration
   expectation <- function(x, n=1)
   {
     x * dtmvnorm.marginal(x, n=n, mean=mean, sigma=sigma, lower=lower, upper=upper)

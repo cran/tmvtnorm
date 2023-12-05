@@ -6,8 +6,8 @@
 
 #library(gmm)
 #library(tmvtnorm)
-#source("rtmvnorm.R")           # für checkTmvArgs()
-#source("tmvnorm-estimation.R") # für vec(), vech() und inv_vech()
+#source("rtmvnorm.R")           # for checkTmvArgs()
+#source("tmvnorm-estimation.R") # for vec(), vech() and inv_vech()
 
 "%w/o%" <- function(x,y) x[!x %in% y] #--  x without y
 
@@ -17,7 +17,7 @@
 #
 ################################################################################
 
-# Definition einer Funktion mit Momentenbedingungen für gmm() 
+# Definition einer Funktion mit Momentenbedingungen fuer gmm() 
 # nach den Lee (1979, 1983, 1981) moment conditions
 #
 # N dimensions, K = N + N*(N+1)/2 parameters
@@ -34,16 +34,16 @@ gmultiLee <- function(tet, fixed=c(), fullcoefnames, x, lower, upper, l_max = ce
  fullcoef[names(tet)]   <- tet
  fullcoef[names(fixed)] <- fixed
  
- K     <- length(tet)      # Anzahl der zu schätzenden Parameter
+ K     <- length(tet)      # Anzahl der zu schaetzenden Parameter
  N     <- ncol(x)          # Anzahl der Dimensionen
  T     <- nrow(x)          # Anzahl der Beobachtungen
- #l_max <- ceiling((N+1)/2)    # maximales l für Momentenbedingungen
+ #l_max <- ceiling((N+1)/2)    # maximales l fuer Momentenbedingungen
  
- X     <- matrix(NA, T, (l_max+1)*N) # Rückgabematrix mit den Momenten
+ X     <- matrix(NA, T, (l_max+1)*N) # Rueckgabematrix mit den Momenten
 
  # Parameter mean/sigma aus dem Parametervektor tet extrahieren
  mean <- fullcoef[1:N]
- # Matrix für sigma bauen
+ # Matrix fuer sigma bauen
  if (cholesky) {
    L <- inv_vech(fullcoef[-(1:N)])
    L[lower.tri(L, diag=FALSE)] <- 0  # L entspricht jetzt chol(sigma), obere Dreiecksmatrix
@@ -88,7 +88,7 @@ gmultiLee <- function(tet, fixed=c(), fullcoefnames, x, lower, upper, l_max = ce
      X[,k]   <- sigma_i %*% mean   * x[,i]^l - sweep(x, 1, x[,i]^l, FUN="*") %*% sigma_inv[,i]   + l * (x[,i]^(l-1)) + (a_il * F_a[i] - b_il * F_b[i]) / F
      
      #T x 1     (1 x N)    (N x 1)   (T x 1)   (T x N)         (N x 1)              (T x 1)        (skalar)
-     k <- k + 1 # Zählvariable
+     k <- k + 1 # Zaehlvariable
    } 
  }
  return(X)
@@ -117,11 +117,11 @@ gmultiManjunathWilhelm <- function(tet, fixed=c(), fullcoefnames, x, lower, uppe
  N     <- ncol(x)          # Anzahl der Dimensionen
  T     <- nrow(x)          # Anzahl der Beobachtungen
  
- X     <- matrix(NA, T, N + N * (N+1) / 2) # Rückgabematrix mit den Momenten
+ X     <- matrix(NA, T, N + N * (N+1) / 2) # Rueckgabematrix mit den Momenten
 
  # Parameter mean/sigma aus dem Parametervektor tet extrahieren
  mean <- fullcoef[1:N]
- # Matrix für sigma bauen
+ # Matrix f?r sigma bauen
  if (cholesky) {
    L <- inv_vech(fullcoef[-(1:N)])
    L[lower.tri(L, diag=FALSE)] <- 0  # L entspricht jetzt chol(sigma), obere Dreiecksmatrix
@@ -143,12 +143,12 @@ gmultiManjunathWilhelm <- function(tet, fixed=c(), fullcoefnames, x, lower, uppe
  # experimental: moments <- mtmvnorm(mean=mean, sigma=sigma, lower=lower, upper=upper, doCheckInputs=FALSE)
  moments <- mtmvnorm(mean=mean, sigma=sigma, lower=lower, upper=upper)
  
- # Momentenbedingungen für die Elemente von mean : mean(x)
+ # Momentenbedingungen fuer die Elemente von mean : mean(x)
  for(i in 1:N) {
    X[,i]   <- (moments$tmean[i] - x[,i])
  }
  
- # Momentenbedingungen für alle Lower-Diagonal-Elemente von sigma
+ # Momentenbedingungen fuer alle Lower-Diagonal-Elemente von sigma
  k <- 1
  for (i in 1:N) {
    for (j in 1:N) {

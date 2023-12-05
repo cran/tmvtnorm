@@ -27,8 +27,8 @@ ptmvnorm <- function(lowerx, upperx, mean=rep(0, length(lowerx)), sigma, lower =
 	stop("lowerx must be smaller than or equal to upperx (lowerx<=upperx)")
     
   # Aufpassen: 
-  # Wir müssen garantieren, dass nur innerhalb des Support-Bereichs lower <= x <= upper integriert wird. Sonst kann Ergebnis >= 1 rauskommen.
-  # Wenn einzelne Komponenten von lowerx <= lower sind, dann von der Untergrenze lower integrieren. Analog für upperx >= upper
+  # Wir muessen garantieren, dass nur innerhalb des Support-Bereichs lower <= x <= upper integriert wird. Sonst kann Ergebnis >= 1 rauskommen.
+  # Wenn einzelne Komponenten von lowerx <= lower sind, dann von der Untergrenze lower integrieren. Analog fuer upperx >= upper
   f <- pmvnorm(lower=pmax(lowerx, lower), upper=pmin(upperx, upper), mean=mean, sigma=sigma, maxpts = maxpts, abseps = abseps, releps = releps) / 
 	   pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma, maxpts = maxpts, abseps = abseps, releps = releps)
   return(f)

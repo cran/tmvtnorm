@@ -1,7 +1,7 @@
-# Verteilungsfunktion für die eindimensionale Randdichte f(xn) einer Truncated Multivariate Normal Distribution,
-# vgl. Jack Cartinhour (1990) "One-dimensional marginal density functions of a truncated multivariate normal density function" für die Dichtefunktion
+# Verteilungsfunktion fuer die eindimensionale Randdichte f(xn) einer Truncated Multivariate Normal Distribution,
+# vgl. Jack Cartinhour (1990) "One-dimensional marginal density functions of a truncated multivariate normal density function" fuer die Dichtefunktion
 #
-# @param xn Vektor der Länge l von Punkten, an dem die Verteilungsfunktion ausgewertet wird
+# @param xn Vektor der Laenge l von Punkten, an dem die Verteilungsfunktion ausgewertet wird
 # @param i Index  (1..n) dessen Randdichte berechnet werden soll
 # @param mean (nx1) Mittelwertvektor
 # @param sigma (nxn)-Kovarianzmatrix

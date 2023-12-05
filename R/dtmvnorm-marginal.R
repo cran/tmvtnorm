@@ -4,7 +4,7 @@
 #
 # 1. Im bivariaten Fall kann explizit eine Formel angegeben werden (vgl. Arnold (1993))
 # 2. Im multivariaten Fall kann ein Integral angegeben werden (vgl. Horrace (2005))
-# 3. Bestimmung der Dichtefunktion über das Integral möglich?
+# 3. Bestimmung der Dichtefunktion ueber das Integral moeglich?
 # 4. Kann die Verteilungsfunktion pmvnorm() helfen? Kann man dann nach einer Variablen differenzieren?
 
 # Literatur:
@@ -15,10 +15,10 @@
 # Jack Cartinhour (1990): One-dimensional marginal density functions of a truncated multivariate normal density function
 # Communications in Statistics - Theory and Methods, Volume 19, Issue 1 1990 , pages 197 - 203
 
-# Dichtefunktion für Randdichte f(xn) einer Truncated Multivariate Normal Distribution,
+# Dichtefunktion fuer Randdichte f(xn) einer Truncated Multivariate Normal Distribution,
 # vgl. Jack Cartinhour (1990) "One-dimensional marginal density functions of a truncated multivariate normal density function"
 #
-# @param xn Vektor der Länge l von Punkten, an dem die Randdichte ausgewertet wird
+# @param xn Vektor der Laenge l von Punkten, an dem die Randdichte ausgewertet wird
 # @param i Index  (1..n) dessen Randdichte berechnet werden soll
 # @param mean (nx1) Mittelwertvektor
 # @param sigma (nxn)-Kovarianzmatrix

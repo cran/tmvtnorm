@@ -43,7 +43,7 @@ vech=function (x)
  v
 }
 
-# Hilfsfunktion : Operator für Namensgebung sigma_i.j (i <= j), d.h. wie vech(), nur Zeilenweise
+# Hilfsfunktion : Operator fuer Namensgebung sigma_i.j (i <= j), d.h. wie vech(), nur Zeilenweise
 vech2 <- function (x)
 {
   # PURPOSE: creates a column vector by stacking columns of x
@@ -174,7 +174,7 @@ mle.tmvnorm <- function(X,
   # Eigentlich wollen wir eine Funktion negloglik(theta) mit einem einzigen Parametersvektor theta.
   # Die Methode mle() braucht aber eine "named list" der Parameter (z.B. mu_1=0, mu_2=0, sigma_1=2,...) und entsprechend eine 
   # Funktion negloglik(mu1, mu2, sigma1,...)
-  # Da wir nicht vorher wissen, wie viele Parameter zu schätzen sind, definieren wir die formals()
+  # Da wir nicht vorher wissen, wie viele Parameter zu schaetzen sind, definieren wir die formals()
   # dynamisch um
   # 
   # @param x dummy/placeholder argument, will be overwritten by formals() with list of skalar parameters
@@ -189,7 +189,7 @@ mle.tmvnorm <- function(X,
     # mean vector herholen
     mean <- theta[1:n]
         
-    # Matrix für sigma bauen
+    # Matrix fuer sigma bauen
     if (cholesky) {
       L <- inv_vech(theta[-(1:n)])
       L[lower.tri(L, diag=FALSE)] <- 0  # L entspricht jetzt chol(sigma), obere Dreiecksmatrix
@@ -276,7 +276,7 @@ vcov(mle.fit1)
 #TODO: confint(mle.fit1)
 #profile(mle.fit1)
 
-# andere Startwerte, näher am wahren Ergebnis
+# andere Startwerte, nÃ¤her am wahren Ergebnis
 mle.fit2 <- mle.tmvnorm(x=X, lower=lower, upper=upper, start=list(mu=c(0.1, 0.1), 
   sigma=matrix(c(1, 0.4, 0.4, 1.8),2,2)))
 # --> funktioniert jetzt besser...

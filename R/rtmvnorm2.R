@@ -260,7 +260,7 @@ rtmvnorm.gibbs2.Fortran <- function(n,
   r <- nrow(D)
   
   # Call to Fortran subroutine
-  # TODO: Aufpassen, ob Matrix D zeilen- oder spaltenweise an Fortran übergeben wird!
+  # TODO: Aufpassen, ob Matrix D zeilen- oder spaltenweise an Fortran uebergeben wird!
   # Bei sigma ist das wegen Symmetrie egal.
   ret <- .Fortran("rtmvnormgibbscov2",
                               n     = as.integer(n),

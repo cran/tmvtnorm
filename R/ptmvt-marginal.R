@@ -1,8 +1,8 @@
-# Verteilungsfunktion für die eindimensionale Randdichte f(x_n) 
+# Verteilungsfunktion fuer die eindimensionale Randdichte f(x_n) 
 # einer Truncated Multivariate Student t Distribution,
 # by integrating out (n-1) dimensions.
 #
-# @param xn Vektor der Länge l von Punkten, an dem die Verteilungsfunktion ausgewertet wird
+# @param xn Vektor der Laenge l von Punkten, an dem die Verteilungsfunktion ausgewertet wird
 # @param i Index  (1..n) dessen Randdichte berechnet werden soll
 # @param mean (nx1) Mittelwertvektor
 # @param sigma (nxn)-Kovarianzmatrix

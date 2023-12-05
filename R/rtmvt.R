@@ -49,7 +49,7 @@ rtmvt <- function(n, mean = rep(0, nrow(sigma)),
 
 # Erzeugt eine Matrix X (n x k) mit Zufallsrealisationen aus einer Trunkierten Multivariaten t Verteilung 
 # mit k Dimensionen
-# ¸ber Rejection Sampling aus einer Multivariaten t-Verteilung
+# ueber Rejection Sampling aus einer Multivariaten t-Verteilung
 #
 # @param n Anzahl der Realisationen
 # @param mean Mittelwertvektor (k x 1) der Normalverteilung
@@ -83,10 +83,10 @@ rtmvt.rejection <- function(n, mean = rep(0, nrow(sigma)), sigma = diag(length(m
   
   if (alpha <= 0.01) warning("Acceptance rate is very low and rejection sampling becomes inefficient. Consider using Gibbs sampling.")
   
-  # Ziehe wiederholt aus der Multivariaten Student-t und schaue, wieviel Samples nach Trunkierung ¸brig bleiben
+  # Ziehe wiederholt aus der Multivariaten Student-t und schaue, wieviel Samples nach Trunkierung uebrig bleiben
   while(numSamples > 0)
   {
-    # Erzeuge N/alpha Samples aus einer multivariaten Normalverteilung: Wenn alpha zu niedrig ist, wird Rejection Sampling ineffizient und N/alpha zu groﬂ. Dann nur N erzeugen
+    # Erzeuge N/alpha Samples aus einer multivariaten Normalverteilung: Wenn alpha zu niedrig ist, wird Rejection Sampling ineffizient und N/alpha zu gross. Dann nur N erzeugen
     nproposals <- ifelse (numSamples/alpha > 1000000, numSamples, ceiling(max(numSamples/alpha,10)))
     X <- rmvt(nproposals, sigma=sigma, df=df) # SW: rmvt() hat keinen Parameter delta
     # add mean :  t(t(X) + mean) oder so:

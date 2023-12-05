@@ -40,7 +40,7 @@
 # @param xq
 # @param xr
 # @param q index for dimension q
-# @param r Index für Dimension r
+# @param r Index for Dimension r
 # @param mean
 # @param sigma
 # @param lower
@@ -81,8 +81,8 @@ dtmvnorm.marginal2 <- function(xq, xr, q, r, mean=rep(0, nrow(sigma)),
   
   # Skalierungsfaktor der gestutzten Dichte (Anteil nach Trunkierung)
   # Idee: dtmvnorm.marginal2() braucht 80% der Zeit von mtmvnorm(). Die meiste Zeit davon in pmvnorm().
-  # pmvnorm()-Aufrufe sind teuer, daher könnte man das alpha schon vorher berechnen
-  # lassen (nur 2 pmvnorm()-Aufrufe in der Methode, würde 50% sparen)
+  # pmvnorm()-Aufrufe sind teuer, daher koennte man das alpha schon vorher berechnen
+  # lassen (nur 2 pmvnorm()-Aufrufe in der Methode, wuerde 50% sparen)
   # Da Methode jetzt vektorisiert ist, sparen wir die Aufrufe wg. alpha
   alpha <- pmvnorm(lower=lower, upper=upper, mean=mean, sigma=sigma, algorithm=pmvnorm.algorithm)
     

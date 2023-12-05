@@ -1,5 +1,10 @@
 # User visible changes in tmvtnorm package
 
+## changes in tmvtnorm  1.6 (2023-12-05)
+* Changed package encoding from 'latin1' to 'UTF-8'.
+* Converted the non-ASCII content to ASCII.
+* Fixed CITATION file
+
 ## changes in tmvtnorm  1.5 (2022-03-22)
 * fixed misleading stop message to "lower bound should be strictly less than the upper bound". Reported by Chao Wang [chao-wang@uiowa.edu]
 * Added README.md
