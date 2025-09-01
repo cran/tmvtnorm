@@ -1,5 +1,5 @@
 importFrom("methods", "as")
-useDynLib(tmvtnorm)
+useDynLib(tmvtnorm, .registration = TRUE)
 import(stats)
 import(utils)
 import(mvtnorm)

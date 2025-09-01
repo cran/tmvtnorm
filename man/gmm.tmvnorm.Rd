@@ -26,7 +26,7 @@ gmm.tmvnorm(X,
   \item{fixed}{Named list. Parameter values to keep fixed during optimization.}
   \item{method}{Which set of moment conditions used, possible methods are "ManjunathWilhelm" (default) and "Lee".}
   \item{cholesky}{if TRUE, we use the Cholesky decomposition of \code{sigma} as parametrization}
-  \item{\dots}{Further arguments to pass to \code{\link{gmm}}}
+  \item{\dots}{Further arguments to pass to \code{\link[gmm]{gmm}}}
 }
 
 \details{

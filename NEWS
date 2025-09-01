@@ -1,5 +1,8 @@
 # User visible changes in tmvtnorm package
 
+## changes in tmvtnorm  1.7 (2025-09-01)
+* Eleminated all CRAN NOTEs during package build process, e.g. Rd \link{} targets missing package anchors 
+
 ## changes in tmvtnorm  1.6 (2023-12-05)
 * Changed package encoding from 'latin1' to 'UTF-8'.
 * Converted the non-ASCII content to ASCII.
